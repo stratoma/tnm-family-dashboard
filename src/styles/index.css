@@ -21,7 +21,7 @@ textarea {
 
 @layer components {
   .card {
-    @apply rounded-3xl border border-oat/80 bg-white p-5 shadow-soft;
+    @apply min-w-0 rounded-3xl border border-oat/80 bg-white p-4 shadow-soft sm:p-5;
   }
 
   .input {
@@ -33,10 +33,10 @@ textarea {
   }
 
   .button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-ink px-4 py-3 text-base font-semibold text-white transition hover:bg-stone-700;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-ink px-4 py-3 text-base font-semibold text-white transition hover:bg-stone-700;
   }
 
   .button-soft {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-oat bg-linen px-4 py-3 text-base font-semibold text-ink transition hover:bg-oat/80;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-oat bg-linen px-4 py-3 text-base font-semibold text-ink transition hover:bg-oat/80;
   }
 }

@@ -54,8 +54,8 @@ export default function Dashboard() {
           </Link>
         }
       />
-      <div className="grid items-start gap-4 lg:grid-cols-[330px_minmax(0,1fr)]">
-        <div className="grid gap-4">
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[330px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4">
           <SectionCard title="Weather" subtitle="New York, NY" icon={<CloudSun size={21} />} className="bg-skysoft/60">
             <div className="flex items-end justify-between gap-4">
               <div>
@@ -113,7 +113,7 @@ export default function Dashboard() {
           icon={<CalendarDays size={21} />}
           className="min-h-full"
         >
-          <div className="grid gap-4">
+          <div className="grid min-w-0 gap-4">
             <ScheduleSection title="Today" count={todayTasks.length + todayEvents.length + todayActivities.length}>
               {todayEvents.map((event) => (
                 <Row key={event.id} dot={event.color} title={event.title} meta={`${friendlyTime(event.start)} · ${event.owner}`} />
@@ -174,8 +174,8 @@ export default function Dashboard() {
 
               return (
                 <div key={project.id} className={`rounded-3xl border p-4 ${projectStatusCard(project.status)}`}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-lg font-semibold">{project.projectName}</p>
                       <p className="mt-1 text-sm text-stone-600">{currency(project.budget)} · due {friendlyDate(project.dueDate)}</p>
                     </div>
@@ -196,12 +196,12 @@ export default function Dashboard() {
 }
 
 function Stack({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-3">{children}</div>;
+  return <div className="grid min-w-0 gap-3">{children}</div>;
 }
 
 function ScheduleSection({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl bg-linen/50 p-4">
+    <div className="min-w-0 rounded-3xl bg-linen/50 p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">{title}</h3>
         <StatusPill label={`${count}`} tone="neutral" />
@@ -225,15 +225,15 @@ function DateGroup({ title, count, children }: { title: string; count: number; c
 
 function Row({ title, meta, dot, pill }: { title: string; meta: string; dot?: string; pill?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-linen/60 p-3">
-      <div className="min-w-0">
+    <div className="min-w-0 overflow-hidden rounded-2xl bg-linen/60 p-3 sm:flex sm:items-center sm:justify-between sm:gap-3">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          {dot ? <span className="h-3 w-3 rounded-full" style={{ backgroundColor: dot }} /> : null}
-          <p className="truncate font-semibold">{title}</p>
+          {dot ? <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: dot }} /> : null}
+          <p className="min-w-0 truncate font-semibold">{title}</p>
         </div>
         <p className="mt-1 truncate text-sm text-stone-500">{meta}</p>
       </div>
-      {pill}
+      {pill ? <div className="mt-3 shrink-0 sm:mt-0">{pill}</div> : null}
     </div>
   );
 }

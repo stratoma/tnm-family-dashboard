@@ -59,10 +59,12 @@ export default function GroceryPage() {
               <div className="grid gap-2">
                 {categoryItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-linen/60 p-3">
-                    <input type="checkbox" checked={item.bought} onChange={(event) => update(item.id, { bought: event.target.checked })} className="h-5 w-5" />
-                    <span className={`flex-1 font-semibold ${item.bought ? 'text-stone-400 line-through' : ''}`}>{item.name}</span>
-                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEdit(item)} aria-label="Edit grocery item"><Pencil size={17} /></button>
-                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(item.id)} aria-label="Delete grocery item"><Trash2 size={17} /></button>
+                    <input type="checkbox" checked={item.bought} onChange={(event) => update(item.id, { bought: event.target.checked })} className="h-5 w-5 shrink-0" />
+                    <span className={`min-w-0 flex-1 truncate font-semibold ${item.bought ? 'text-stone-400 line-through' : ''}`}>{item.name}</span>
+                    <div className="flex shrink-0 gap-2">
+                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEdit(item)} aria-label="Edit grocery item"><Pencil size={17} /></button>
+                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(item.id)} aria-label="Delete grocery item"><Trash2 size={17} /></button>
+                    </div>
                   </div>
                 ))}
                 {categoryItems.length === 0 ? <p className="rounded-2xl bg-linen/50 p-3 text-sm text-stone-500">Nothing here yet.</p> : null}
@@ -71,7 +73,7 @@ export default function GroceryPage() {
           );
         })}
       </div>
-      <button className="button-primary fixed bottom-5 right-5 z-40 shadow-soft xl:hidden" onClick={openAdd}>
+      <button className="button-primary fixed inset-x-3 bottom-5 z-40 shadow-soft sm:inset-x-auto sm:right-5 xl:hidden" onClick={openAdd}>
         <Plus size={18} /> Add item
       </button>
       <Modal open={open} title={editingItem ? 'Edit grocery item' : 'Add grocery item'} onClose={closeModal}>

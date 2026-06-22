@@ -37,17 +37,17 @@ export default function App() {
   return (
     <div className="min-h-screen bg-cream text-ink">
       <header className="sticky top-0 z-30 border-b border-oat/70 bg-cream/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
           <NavLink to="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sage text-white shadow-soft">
-              <Sparkles size={22} />
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-sage text-white shadow-soft sm:h-11 sm:w-11">
+              <Sparkles size={21} />
             </span>
-            <span>
-              <span className="block text-xl font-semibold tracking-tight">Family Dashboard</span>
+            <span className="min-w-0">
+              <span className="block truncate text-lg font-semibold tracking-tight sm:text-xl">Family Dashboard</span>
               <span className="block text-sm text-stone-500">{today}</span>
             </span>
           </NavLink>
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="hidden items-center gap-2 xl:flex">
             <nav className="flex flex-wrap items-center gap-1 rounded-3xl bg-white p-1 shadow-soft">
               {navItems.map((item) => (
                 <DesktopNavItem key={item.to} {...item} />
@@ -58,7 +58,7 @@ export default function App() {
             </NavLink>
           </div>
           <button
-            className="grid h-11 w-11 place-items-center rounded-2xl border border-oat bg-white lg:hidden"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-oat bg-white xl:hidden"
             onClick={() => setMenuOpen((value) => !value)}
             aria-label="Open navigation"
           >
@@ -66,14 +66,14 @@ export default function App() {
           </button>
         </div>
         {menuOpen ? (
-          <nav className="grid gap-2 border-t border-oat/70 bg-cream px-4 py-3 lg:hidden">
+          <nav className="grid max-h-[calc(100vh-72px)] grid-cols-2 gap-2 overflow-y-auto border-t border-oat/70 bg-cream px-3 py-3 xl:hidden">
             {[...navItems, { to: '/settings', label: 'Settings', icon: Sparkles }].map((item) => (
               <MobileNavItem key={item.to} {...item} onClick={() => setMenuOpen(false)} />
             ))}
           </nav>
         ) : null}
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-3 py-5 pb-24 sm:px-6 lg:px-8 xl:pb-8">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<CalendarPage />} />
@@ -112,7 +112,7 @@ function MobileNavItem({ to, label, icon: Icon, onClick }: (typeof navItems)[num
       to={to}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-medium ${
+        `flex min-h-14 items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold sm:gap-3 sm:px-4 sm:text-base ${
           isActive ? 'bg-ink text-white' : 'bg-white text-stone-700'
         }`
       }

@@ -58,19 +58,25 @@ export default function TasksPage() {
         {items.length === 0 ? <EmptyState title="No tasks yet">Add the first small thing that would make today easier.</EmptyState> : null}
         <div className="grid gap-3">
           {items.map((task) => (
-            <div key={task.id} className="flex items-center gap-3 rounded-3xl bg-linen/60 p-4">
-              <input type="checkbox" checked={task.completed} onChange={(event) => update(task.id, { completed: event.target.checked })} className="h-6 w-6 rounded border-oat text-sage" />
-              <div className="min-w-0 flex-1">
-                <p className={`text-lg font-semibold ${task.completed ? 'text-stone-400 line-through' : ''}`}>{task.title}</p>
-                <p className="text-sm text-stone-500">{task.assignee} · due {friendlyDate(task.dueDate)}</p>
+            <div key={task.id} className="grid gap-3 rounded-3xl bg-linen/60 p-4 sm:flex sm:items-center">
+              <div className="flex min-w-0 items-center gap-3">
+                <input type="checkbox" checked={task.completed} onChange={(event) => update(task.id, { completed: event.target.checked })} className="h-6 w-6 shrink-0 rounded border-oat text-sage" />
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-lg font-semibold ${task.completed ? 'text-stone-400 line-through' : ''}`}>{task.title}</p>
+                  <p className="truncate text-sm text-stone-500">{task.assignee} · due {friendlyDate(task.dueDate)}</p>
+                </div>
               </div>
-              <StatusPill label={task.priority} tone={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'yellow' : 'neutral'} />
-              <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEdit(task)} aria-label="Edit task">
-                <Pencil size={17} />
-              </button>
-              <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(task.id)} aria-label="Delete task">
-                <Trash2 size={17} />
-              </button>
+              <div className="flex items-center justify-between gap-2 sm:ml-auto sm:justify-end">
+                <StatusPill label={task.priority} tone={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'yellow' : 'neutral'} />
+                <div className="flex gap-2">
+                  <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEdit(task)} aria-label="Edit task">
+                    <Pencil size={17} />
+                  </button>
+                  <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(task.id)} aria-label="Delete task">
+                    <Trash2 size={17} />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

@@ -76,7 +76,7 @@ export default function ProjectsPage() {
           </SectionCard>
         ))}
       </div>
-      <button className="button-primary fixed bottom-5 right-5 z-40 shadow-soft lg:hidden" onClick={openAdd}>
+      <button className="button-primary fixed inset-x-3 bottom-5 z-40 shadow-soft sm:inset-x-auto sm:right-5 lg:hidden" onClick={openAdd}>
         <Plus size={18} /> Add project
       </button>
       <Modal open={open} title={editingProject ? 'Edit home project' : 'Add home project'} onClose={closeModal}>
