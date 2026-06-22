@@ -6,13 +6,14 @@ import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
-import { familyMembers, tasksSeed } from '../lib/sampleData';
+import { tasksSeed } from '../lib/sampleData';
 import { friendlyDate } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
 import type { Priority, Task } from '../lib/types';
 
 export default function TasksPage() {
   const { items, add, update, remove } = useLocalCollection<Task>(tasksSeed);
+  const [assignees, setAssignees] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -31,16 +32,30 @@ export default function TasksPage() {
     setEditingTask(null);
   }
 
+  function removeAssignee(name: string) {
+    setAssignees((current) => current.filter((assignee) => assignee !== name));
+    items
+      .filter((task) => task.assignee === name)
+      .forEach((task) => update(task.id, { assignee: 'Unassigned' }));
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const selectedAssignee = String(form.get('assignee'));
+    const newAssignee = String(form.get('newAssignee')).trim();
+    const assignee = newAssignee || selectedAssignee || 'Unassigned';
     const nextTask = {
       title: String(form.get('title')),
-      assignee: String(form.get('assignee')),
+      assignee,
       priority: String(form.get('priority')) as Priority,
       dueDate: String(form.get('dueDate')),
       completed: form.get('completed') === 'on',
     };
+
+    if (newAssignee && !assignees.includes(newAssignee)) {
+      setAssignees((current) => [...current, newAssignee]);
+    }
 
     if (editingTask) {
       update(editingTask.id, nextTask);
@@ -84,7 +99,30 @@ export default function TasksPage() {
       <Modal open={open} title={editingTask ? 'Edit task' : 'Add task'} onClose={closeModal}>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Task"><TextInput name="title" required placeholder="Pack lunches" defaultValue={editingTask?.title} /></Field>
-          <Field label="Assign to"><SelectInput name="assignee" defaultValue={editingTask?.assignee}>{familyMembers.map((member) => <option key={member.id}>{member.name}</option>)}</SelectInput></Field>
+          <Field label="Assign to">
+            <SelectInput name="assignee" defaultValue={editingTask?.assignee ?? 'Unassigned'}>
+              <option>Unassigned</option>
+              {assignees.map((assignee) => <option key={assignee}>{assignee}</option>)}
+            </SelectInput>
+          </Field>
+          <Field label="New assignee"><TextInput name="newAssignee" placeholder="Add a name, like Thierry or Martine" /></Field>
+          {assignees.length > 0 ? (
+            <div className="rounded-2xl bg-linen p-4">
+              <p className="mb-3 text-sm font-semibold text-stone-600">Current assignees</p>
+              <div className="flex flex-wrap gap-2">
+                {assignees.map((assignee) => (
+                  <button
+                    key={assignee}
+                    type="button"
+                    className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-600"
+                    onClick={() => removeAssignee(assignee)}
+                  >
+                    Remove {assignee}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <Field label="Priority"><SelectInput name="priority" defaultValue={editingTask?.priority}><option>Low</option><option>Medium</option><option>High</option></SelectInput></Field>
           <Field label="Due date"><TextInput name="dueDate" type="date" required defaultValue={editingTask?.dueDate} /></Field>
           <label className="flex items-center gap-3 rounded-2xl bg-linen p-4 font-semibold"><input name="completed" type="checkbox" className="h-5 w-5" defaultChecked={editingTask?.completed} /> Completed</label>

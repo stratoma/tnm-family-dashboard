@@ -8,9 +8,9 @@ export const familyMembers: FamilyMember[] = [
 ];
 
 export const tasksSeed: Task[] = [
-  { id: 't1', title: 'Sign school permission slip', assignee: 'Alex', priority: 'High', dueDate: '2026-06-21', completed: false },
-  { id: 't2', title: 'Book summer camp pickup rotation', assignee: 'Jordan', priority: 'Medium', dueDate: '2026-06-22', completed: false },
-  { id: 't3', title: 'Return library books', assignee: 'Maya', priority: 'Low', dueDate: '2026-06-24', completed: true },
+  { id: 't1', title: 'Sign school permission slip', assignee: 'Unassigned', priority: 'High', dueDate: '2026-06-21', completed: false },
+  { id: 't2', title: 'Book summer camp pickup rotation', assignee: 'Unassigned', priority: 'Medium', dueDate: '2026-06-22', completed: false },
+  { id: 't3', title: 'Return library books', assignee: 'Unassigned', priority: 'Low', dueDate: '2026-06-24', completed: true },
 ];
 
 export const calendarSeed: CalendarEvent[] = [
