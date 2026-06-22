@@ -9,6 +9,7 @@ A minimalist family command center built with React, TypeScript, Tailwind CSS, S
 - To-dos, kids' activities, doctor appointments, birthdays, groceries, and home projects
 - Slide-over quick-entry forms, empty states, loading/error components, and large mobile-first controls
 - Server-side weather proxy so API keys are never exposed in the browser
+- Private access-code gate checked by a serverless API route
 - Google OAuth routes with read-only calendar scope and token refresh handling
 - Supabase schema with row-level security
 
@@ -31,6 +32,16 @@ npm run dev
 Open the Vite URL shown in the terminal.
 
 Copy `.env.example` to `.env.local` and fill in values before connecting live services.
+
+## Access Code Setup
+
+Set an access code so only people with the code can open the dashboard:
+
+```bash
+ACCESS_CODE=choose-a-private-family-code
+```
+
+The code is checked by `/api/access/verify` on the server. The frontend only stores a temporary `sessionStorage` flag after a successful unlock, so the real code is not exposed in the browser bundle.
 
 ## Supabase Setup
 

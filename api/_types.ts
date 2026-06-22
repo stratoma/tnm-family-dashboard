@@ -9,4 +9,5 @@ export type VercelResponse = {
   json(body: unknown): void;
   redirect(url: string): void;
   setHeader(name: string, value: string): void;
+  end(body?: string): void;
 };
