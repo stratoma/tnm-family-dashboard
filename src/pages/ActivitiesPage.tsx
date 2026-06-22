@@ -1,4 +1,4 @@
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Field, FormActions, SelectInput, TextArea, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
@@ -11,7 +11,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { KidsActivity } from '../lib/types';
 
 export default function ActivitiesPage() {
-  const { items, add, update } = useLocalCollection<KidsActivity>(activitiesSeed);
+  const { items, add, update, remove } = useLocalCollection<KidsActivity>(activitiesSeed);
   const [open, setOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<KidsActivity | null>(null);
 
@@ -59,9 +59,12 @@ export default function ActivitiesPage() {
           <SectionCard key={activity.id} title={activity.activityName} subtitle={`${activity.childName} · ${friendlyDate(activity.dateTime)} at ${friendlyTime(activity.dateTime)}`}>
             <p className="text-stone-600">{activity.location}</p>
             <p className="mt-3 rounded-2xl bg-linen p-3 text-sm text-stone-600">{activity.notes || 'No notes yet.'}</p>
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               {activity.reminder ? <StatusPill label="Reminder on" tone="green" /> : <StatusPill label="No reminder" tone="neutral" />}
-              <button className="button-soft px-3 py-2 text-sm" onClick={() => openEdit(activity)}><Pencil size={16} /> Edit</button>
+              <div className="flex gap-2">
+                <button className="button-soft px-3 py-2 text-sm" onClick={() => openEdit(activity)}><Pencil size={16} /> Edit</button>
+                <button className="button-soft px-3 py-2 text-sm text-clay" onClick={() => remove(activity.id)}><Trash2 size={16} /> Delete</button>
+              </div>
             </div>
           </SectionCard>
         ))}

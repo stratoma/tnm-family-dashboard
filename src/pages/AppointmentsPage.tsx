@@ -1,4 +1,4 @@
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Field, FormActions, SelectInput, TextArea, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
@@ -11,7 +11,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { DoctorAppointment } from '../lib/types';
 
 export default function AppointmentsPage() {
-  const { items, add, update } = useLocalCollection<DoctorAppointment>(appointmentsSeed);
+  const { items, add, update, remove } = useLocalCollection<DoctorAppointment>(appointmentsSeed);
   const [open, setOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<DoctorAppointment | null>(null);
 
@@ -61,9 +61,12 @@ export default function AppointmentsPage() {
             <p className="font-semibold">{appointment.doctorName}</p>
             <p className="mt-1 text-stone-600">{appointment.address}</p>
             <p className="mt-3 rounded-2xl bg-linen p-3 text-sm text-stone-600">{appointment.notes || 'No notes yet.'}</p>
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               {appointment.followUpReminder ? <StatusPill label="Follow-up reminder" tone="green" /> : <StatusPill label="No follow-up" tone="neutral" />}
-              <button className="button-soft px-3 py-2 text-sm" onClick={() => openEdit(appointment)}><Pencil size={16} /> Edit</button>
+              <div className="flex gap-2">
+                <button className="button-soft px-3 py-2 text-sm" onClick={() => openEdit(appointment)}><Pencil size={16} /> Edit</button>
+                <button className="button-soft px-3 py-2 text-sm text-clay" onClick={() => remove(appointment.id)}><Trash2 size={16} /> Delete</button>
+              </div>
             </div>
           </SectionCard>
         ))}

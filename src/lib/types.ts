@@ -66,7 +66,7 @@ export type Birthday = {
   reminderDays: number;
 };
 
-export type GroceryCategory = 'Produce' | 'Meat' | 'Dairy' | 'Pantry' | 'Household' | 'Snacks' | 'Other';
+export type GroceryCategory = string;
 
 export type GroceryItem = {
   id: string;

@@ -256,6 +256,8 @@ function GroceryIcon({ category }: { category: GroceryCategory }) {
       return <Cookie {...iconProps} />;
     case 'Other':
       return <ShoppingBag {...iconProps} />;
+    default:
+      return <ShoppingBag {...iconProps} />;
   }
 }
 
@@ -274,6 +276,8 @@ function groceryTone(category: GroceryCategory) {
     case 'Snacks':
       return 'bg-amber-100 text-amber-700';
     case 'Other':
+      return 'bg-oat text-stone-700';
+    default:
       return 'bg-oat text-stone-700';
   }
 }

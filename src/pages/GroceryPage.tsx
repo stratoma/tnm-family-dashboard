@@ -8,12 +8,14 @@ import { groceriesSeed } from '../lib/sampleData';
 import { useLocalCollection } from '../lib/useLocalCollection';
 import type { GroceryCategory, GroceryItem } from '../lib/types';
 
-const categories: GroceryCategory[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Snacks', 'Other'];
+const defaultCategories: GroceryCategory[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Snacks', 'Other'];
 
 export default function GroceryPage() {
   const { items, add, update, remove } = useLocalCollection<GroceryItem>(groceriesSeed);
+  const [categories, setCategories] = useState<GroceryCategory[]>(defaultCategories);
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null);
+  const categoryOptions = Array.from(new Set([...categories, ...items.map((item) => item.category)]));
 
   function openAdd() {
     setEditingItem(null);
@@ -33,11 +35,18 @@ export default function GroceryPage() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const selectedCategory = String(form.get('category'));
+    const newCategory = String(form.get('newCategory')).trim();
+    const category = newCategory || selectedCategory;
     const nextItem = {
       name: String(form.get('name')),
-      category: String(form.get('category')) as GroceryCategory,
+      category,
       bought: form.get('bought') === 'on',
     };
+
+    if (newCategory && !categories.includes(newCategory)) {
+      setCategories((current) => [...current, newCategory]);
+    }
 
     if (editingItem) {
       update(editingItem.id, nextItem);
@@ -52,7 +61,7 @@ export default function GroceryPage() {
     <>
       <PageHeader title="Grocery list" description="A shared family list with quick add, categories, and bought status." action={<button className="button-primary" onClick={openAdd}><Plus size={18} /> Add item</button>} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {categories.map((category) => {
+        {categoryOptions.map((category) => {
           const categoryItems = items.filter((item) => item.category === category);
           return (
             <SectionCard key={category} title={category} subtitle={`${categoryItems.length} items`}>
@@ -79,7 +88,8 @@ export default function GroceryPage() {
       <Modal open={open} title={editingItem ? 'Edit grocery item' : 'Add grocery item'} onClose={closeModal}>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Item"><TextInput name="name" required placeholder="Bananas" defaultValue={editingItem?.name} /></Field>
-          <Field label="Category"><SelectInput name="category" defaultValue={editingItem?.category}>{categories.map((category) => <option key={category}>{category}</option>)}</SelectInput></Field>
+          <Field label="Category"><SelectInput name="category" defaultValue={editingItem?.category}>{categoryOptions.map((category) => <option key={category}>{category}</option>)}</SelectInput></Field>
+          <Field label="New category"><TextInput name="newCategory" placeholder="Create one, like Baby, Frozen, Pets" /></Field>
           <label className="flex items-center gap-3 rounded-2xl bg-linen p-4 font-semibold"><input name="bought" type="checkbox" className="h-5 w-5" defaultChecked={editingItem?.bought} /> Bought</label>
           <FormActions onCancel={closeModal} submitLabel={editingItem ? 'Save changes' : 'Add item'} />
         </form>

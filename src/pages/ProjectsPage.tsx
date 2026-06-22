@@ -1,4 +1,4 @@
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Field, FormActions, SelectInput, TextArea, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
@@ -13,7 +13,7 @@ import type { HomeProject, ProjectStatus } from '../lib/types';
 const statuses: ProjectStatus[] = ['Not Started', 'In Progress', 'Waiting', 'Done'];
 
 export default function ProjectsPage() {
-  const { items, add, update } = useLocalCollection<HomeProject>(projectsSeed);
+  const { items, add, update, remove } = useLocalCollection<HomeProject>(projectsSeed);
   const [open, setOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
 
@@ -62,7 +62,10 @@ export default function ProjectsPage() {
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <StatusPill label={project.status} tone={project.status === 'Done' ? 'green' : project.status === 'Waiting' ? 'yellow' : 'blue'} />
               <StatusPill label={currency(project.budget)} tone="neutral" />
-              <button className="button-soft w-full px-3 py-2 text-sm sm:ml-auto sm:w-auto" onClick={() => openEdit(project)}><Pencil size={16} /> Edit project</button>
+              <div className="grid w-full gap-2 sm:ml-auto sm:flex sm:w-auto">
+                <button className="button-soft px-3 py-2 text-sm" onClick={() => openEdit(project)}><Pencil size={16} /> Edit project</button>
+                <button className="button-soft px-3 py-2 text-sm text-clay" onClick={() => remove(project.id)}><Trash2 size={16} /> Delete</button>
+              </div>
             </div>
             <p className="rounded-2xl bg-linen p-3 text-sm text-stone-600">{project.notes}</p>
             <div className="mt-4 grid gap-2">
