@@ -13,7 +13,7 @@ import type { HomeProject, ProjectStatus } from '../lib/types';
 const statuses: ProjectStatus[] = ['Not Started', 'In Progress', 'Waiting', 'Done'];
 
 export default function ProjectsPage() {
-  const { items, add, update, remove } = useLocalCollection<HomeProject>(projectsSeed);
+  const { items, add, update, remove } = useLocalCollection<HomeProject>(projectsSeed, 'home_projects');
   const [open, setOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
 

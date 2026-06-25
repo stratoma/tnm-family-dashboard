@@ -11,7 +11,7 @@ import type { GroceryCategory, GroceryItem } from '../lib/types';
 const defaultCategories: GroceryCategory[] = ['Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Snacks', 'Other'];
 
 export default function GroceryPage() {
-  const { items, add, update, remove } = useLocalCollection<GroceryItem>(groceriesSeed);
+  const { items, add, update, remove } = useLocalCollection<GroceryItem>(groceriesSeed, 'grocery_items');
   const [categories, setCategories] = useState<GroceryCategory[]>(defaultCategories);
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null);

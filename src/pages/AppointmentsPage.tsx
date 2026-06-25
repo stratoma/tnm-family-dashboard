@@ -11,7 +11,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { DoctorAppointment } from '../lib/types';
 
 export default function AppointmentsPage() {
-  const { items, add, update, remove } = useLocalCollection<DoctorAppointment>(appointmentsSeed);
+  const { items, add, update, remove } = useLocalCollection<DoctorAppointment>(appointmentsSeed, 'doctor_appointments');
   const [open, setOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<DoctorAppointment | null>(null);
 

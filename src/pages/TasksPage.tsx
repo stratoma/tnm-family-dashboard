@@ -1,5 +1,5 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import EmptyState from '../components/EmptyState';
 import { Field, FormActions, SelectInput, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
@@ -12,8 +12,8 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { Priority, Task } from '../lib/types';
 
 export default function TasksPage() {
-  const { items, add, update, remove } = useLocalCollection<Task>(tasksSeed);
-  const [assignees, setAssignees] = useState<string[]>([]);
+  const { items, add, update, remove } = useLocalCollection<Task>(tasksSeed, 'tasks');
+  const [assignees, setAssignees] = useState<string[]>(() => readAssignees());
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -21,6 +21,10 @@ export default function TasksPage() {
     setEditingTask(null);
     setOpen(true);
   }
+
+  useEffect(() => {
+    window.localStorage.setItem('family-dashboard:task_assignees', JSON.stringify(assignees));
+  }, [assignees]);
 
   function openEdit(task: Task) {
     setEditingTask(task);
@@ -131,4 +135,13 @@ export default function TasksPage() {
       </Modal>
     </>
   );
+}
+
+function readAssignees() {
+  try {
+    const stored = window.localStorage.getItem('family-dashboard:task_assignees');
+    return stored ? (JSON.parse(stored) as string[]) : [];
+  } catch {
+    return [];
+  }
 }

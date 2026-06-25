@@ -19,28 +19,36 @@ import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
 import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, groceriesSeed, projectsSeed, tasksSeed, activitiesSeed } from '../lib/sampleData';
 import { currency, daysUntil, friendlyDate, friendlyTime } from '../lib/format';
+import { readStoredCollection } from '../lib/useLocalCollection';
 import type { GroceryCategory, ProjectStatus } from '../lib/types';
 
 export default function Dashboard() {
+  const tasks = readStoredCollection('tasks', tasksSeed);
+  const calendarEvents = readStoredCollection('calendar_events', calendarSeed);
+  const activities = readStoredCollection('kids_activities', activitiesSeed);
+  const appointments = readStoredCollection('doctor_appointments', appointmentsSeed);
+  const birthdays = readStoredCollection('birthdays', birthdaysSeed);
+  const groceryItems = readStoredCollection('grocery_items', groceriesSeed);
+  const projects = readStoredCollection('home_projects', projectsSeed);
   const today = new Date();
   const tomorrow = addDays(today, 1);
-  const todayTasks = tasksSeed.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), today));
-  const tomorrowTasks = tasksSeed.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), tomorrow));
-  const todayEvents = calendarSeed.filter((event) => isSameDay(parseISO(event.start), today));
-  const tomorrowEvents = calendarSeed.filter((event) => isSameDay(parseISO(event.start), tomorrow));
-  const todayActivities = activitiesSeed.filter((activity) => isSameDay(parseISO(activity.dateTime), today));
-  const tomorrowActivities = activitiesSeed.filter((activity) => isSameDay(parseISO(activity.dateTime), tomorrow));
-  const monthlyAppointments = appointmentsSeed.filter((appointment) =>
+  const todayTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), today));
+  const tomorrowTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), tomorrow));
+  const todayEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), today));
+  const tomorrowEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), tomorrow));
+  const todayActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), today));
+  const tomorrowActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), tomorrow));
+  const monthlyAppointments = appointments.filter((appointment) =>
     isWithinInterval(parseISO(appointment.dateTime), { start: today, end: endOfMonth(today) }),
   );
-  const monthlyBirthdays = birthdaysSeed.filter((birthday) =>
+  const monthlyBirthdays = birthdays.filter((birthday) =>
     isWithinInterval(parseISO(birthday.birthday), { start: today, end: endOfMonth(today) }),
   );
   const nextMonthEnd = endOfMonth(addMonths(today, 1));
-  const upcomingEvents = calendarSeed.filter((event) =>
+  const upcomingEvents = calendarEvents.filter((event) =>
     isWithinInterval(parseISO(event.start), { start: today, end: nextMonthEnd }),
   );
-  const groceries = groceriesSeed.filter((item) => !item.bought).slice(0, 4);
+  const groceries = groceryItems.filter((item) => !item.bought).slice(0, 4);
 
   return (
     <>
@@ -168,7 +176,7 @@ export default function Dashboard() {
         </SectionCard>
         <SectionCard title="Home progress report" subtitle="Color-coded status" icon={<Home size={21} />} className="lg:col-span-2">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {projectsSeed.map((project) => {
+            {projects.map((project) => {
               const completed = project.tasks.filter((task) => task.completed).length;
               const progress = project.tasks.length === 0 ? 0 : Math.round((completed / project.tasks.length) * 100);
 

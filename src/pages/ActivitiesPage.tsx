@@ -11,7 +11,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { KidsActivity } from '../lib/types';
 
 export default function ActivitiesPage() {
-  const { items, add, update, remove } = useLocalCollection<KidsActivity>(activitiesSeed);
+  const { items, add, update, remove } = useLocalCollection<KidsActivity>(activitiesSeed, 'kids_activities');
   const [open, setOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<KidsActivity | null>(null);
 

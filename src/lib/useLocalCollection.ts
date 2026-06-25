@@ -1,9 +1,31 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type WithId = { id: string };
+const storagePrefix = 'family-dashboard';
 
-export function useLocalCollection<T extends WithId>(seed: T[]) {
-  const [items, setItems] = useState(seed);
+export function readStoredCollection<T>(key: string, seed: T[]) {
+  if (typeof window === 'undefined') {
+    return seed;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(`${storagePrefix}:${key}`);
+    return stored ? (JSON.parse(stored) as T[]) : seed;
+  } catch {
+    return seed;
+  }
+}
+
+export function useLocalCollection<T extends WithId>(seed: T[], storageKey?: string) {
+  const [items, setItems] = useState(() => (storageKey ? readStoredCollection<T>(storageKey, seed) : seed));
+
+  useEffect(() => {
+    if (!storageKey) {
+      return;
+    }
+
+    window.localStorage.setItem(`${storagePrefix}:${storageKey}`, JSON.stringify(items));
+  }, [items, storageKey]);
 
   const actions = useMemo(
     () => ({

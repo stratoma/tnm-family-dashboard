@@ -13,7 +13,7 @@ import { friendlyDate, friendlyTime } from '../lib/format';
 const views: CalendarView[] = ['Today', 'Week', 'Month'];
 
 export default function CalendarPage() {
-  const { items, update, remove } = useLocalCollection<CalendarEvent>(calendarSeed);
+  const { items, update, remove } = useLocalCollection<CalendarEvent>(calendarSeed, 'calendar_events');
   const [view, setView] = useState<CalendarView>('Today');
   const [visibleCalendars, setVisibleCalendars] = useState(['Family', 'Kids', 'Health']);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);

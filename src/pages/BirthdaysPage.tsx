@@ -11,7 +11,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { Birthday } from '../lib/types';
 
 export default function BirthdaysPage() {
-  const { items, add, update, remove } = useLocalCollection<Birthday>(birthdaysSeed);
+  const { items, add, update, remove } = useLocalCollection<Birthday>(birthdaysSeed, 'birthdays');
   const [open, setOpen] = useState(false);
   const [editingBirthday, setEditingBirthday] = useState<Birthday | null>(null);
 
