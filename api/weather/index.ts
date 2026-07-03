@@ -1,9 +1,13 @@
-import type { VercelRequest, VercelResponse } from '../_types';
-
 type WeatherUnits = 'imperial' | 'metric';
 
-type WeatherProviderError = Error & {
-  statusCode?: number;
+type WeatherRequest = {
+  query: Record<string, string | string[] | undefined>;
+};
+
+type WeatherResponse = {
+  status(code: number): WeatherResponse;
+  json(body: unknown): void;
+  setHeader(name: string, value: string): void;
 };
 
 type OpenMeteoGeocodingResponse = {
@@ -26,22 +30,38 @@ type OpenMeteoForecastResponse = {
   };
 };
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+const fallbackWeather = {
+  city: 'New York, New York',
+  temperature: 72,
+  low: 66,
+  high: 78,
+  description: 'Weather temporarily unavailable',
+};
+
+export default async function handler(req: WeatherRequest, res: WeatherResponse) {
+  res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
+
   try {
     const city = getStringQuery(req.query.city, 'New York');
     const units = getUnits(req.query.units);
-    const weather = await getWeather(city, units, process.env.WEATHER_API_KEY);
+    const weather = await getWeather(city, units, getWeatherApiKey());
 
-    res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
     res.status(200).json(weather);
   } catch (error) {
-    if (error instanceof Error && 'statusCode' in error && typeof error.statusCode === 'number') {
-      res.status(error.statusCode).json({ error: error.message });
-      return;
-    }
-
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unable to load weather.' });
+    res.status(200).json({
+      ...fallbackWeather,
+      source: 'fallback',
+      error: error instanceof Error ? error.message : 'Unable to load weather.',
+    });
   }
+}
+
+function getWeatherApiKey() {
+  if (typeof process === 'undefined') {
+    return undefined;
+  }
+
+  return process.env.WEATHER_API_KEY;
 }
 
 function getStringQuery(value: string | string[] | undefined, fallback: string) {
@@ -71,9 +91,9 @@ async function getOpenWeather(city: string, units: WeatherUnits, apiKey: string)
   url.searchParams.set('appid', apiKey);
   url.searchParams.set('units', units);
 
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   if (!response.ok) {
-    throw providerError(response.status, 'Weather provider request failed.');
+    throw new Error('Weather provider request failed.');
   }
 
   const data = await response.json();
@@ -94,15 +114,15 @@ async function getOpenMeteoWeather(city: string, units: WeatherUnits) {
   geocodingUrl.searchParams.set('language', 'en');
   geocodingUrl.searchParams.set('format', 'json');
 
-  const geocodingResponse = await fetch(geocodingUrl);
+  const geocodingResponse = await fetchWithTimeout(geocodingUrl);
   if (!geocodingResponse.ok) {
-    throw providerError(geocodingResponse.status, 'Unable to find that city.');
+    throw new Error('Unable to find that city.');
   }
 
   const geocodingData = (await geocodingResponse.json()) as OpenMeteoGeocodingResponse;
   const place = geocodingData.results?.[0];
   if (!place || typeof place.latitude !== 'number' || typeof place.longitude !== 'number') {
-    throw providerError(404, 'Unable to find that city.');
+    throw new Error('Unable to find that city.');
   }
 
   const forecastUrl = new URL('https://api.open-meteo.com/v1/forecast');
@@ -114,9 +134,9 @@ async function getOpenMeteoWeather(city: string, units: WeatherUnits) {
   forecastUrl.searchParams.set('timezone', 'auto');
   forecastUrl.searchParams.set('forecast_days', '1');
 
-  const forecastResponse = await fetch(forecastUrl);
+  const forecastResponse = await fetchWithTimeout(forecastUrl);
   if (!forecastResponse.ok) {
-    throw providerError(forecastResponse.status, 'Weather provider request failed.');
+    throw new Error('Weather provider request failed.');
   }
 
   const forecastData = (await forecastResponse.json()) as OpenMeteoForecastResponse;
@@ -125,7 +145,7 @@ async function getOpenMeteoWeather(city: string, units: WeatherUnits) {
   const high = forecastData.daily?.temperature_2m_max?.[0];
 
   if (typeof temperature !== 'number' || typeof low !== 'number' || typeof high !== 'number') {
-    throw providerError(502, 'Weather provider response was incomplete.');
+    throw new Error('Weather provider response was incomplete.');
   }
 
   return {
@@ -137,10 +157,15 @@ async function getOpenMeteoWeather(city: string, units: WeatherUnits) {
   };
 }
 
-function providerError(statusCode: number, message: string): WeatherProviderError {
-  const error = new Error(message) as WeatherProviderError;
-  error.statusCode = statusCode;
-  return error;
+async function fetchWithTimeout(url: URL) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function weatherCodeDescription(code?: number) {
