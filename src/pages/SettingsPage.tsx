@@ -60,15 +60,15 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Connection status and deployment-ready configuration for the family dashboard." />
+      <PageHeader title="Settings" description="Add kids names, manage family setup, and review deployment-ready configuration." />
       <div className="grid gap-4 md:grid-cols-2">
         <SectionCard
-          title="Children"
-          subtitle={`${children.length} saved`}
+          title="Kids names"
+          subtitle={`${children.length} saved for activities, calendar, and appointments`}
           icon={<Users size={20} />}
           action={
             <button className="button-primary min-h-10 px-3 py-2 text-sm" onClick={openAddChild}>
-              <Plus size={16} /> Add child
+              <Plus size={16} /> Add kid
             </button>
           }
         >
@@ -85,7 +85,7 @@ export default function SettingsPage() {
                 </button>
               </div>
             ))}
-            {children.length === 0 ? <p className="rounded-2xl bg-linen p-3 text-sm text-stone-500">No children added yet.</p> : null}
+            {children.length === 0 ? <p className="rounded-2xl bg-linen p-3 text-sm text-stone-500">No kids added yet.</p> : null}
           </div>
         </SectionCard>
         <SectionCard title="Supabase" subtitle="Auth, database, and row-level security" icon={<Database size={20} />}>
@@ -105,11 +105,11 @@ export default function SettingsPage() {
           <p className="mt-4 text-sm leading-6 text-stone-600">Service role keys belong only on the server. Validate inputs before writes and refresh Google tokens securely.</p>
         </SectionCard>
       </div>
-      <Modal open={open} title={editingChild ? 'Edit child' : 'Add child'} onClose={closeModal}>
+      <Modal open={open} title={editingChild ? 'Edit kid name' : 'Add kid name'} onClose={closeModal}>
         <form onSubmit={submitChild} className="grid gap-4">
-          <Field label="Name"><TextInput name="name" required placeholder="Child name" defaultValue={editingChild?.name} /></Field>
+          <Field label="Kid name"><TextInput name="name" required placeholder="Kid name" defaultValue={editingChild?.name} /></Field>
           <Field label="Color"><TextInput name="color" type="color" defaultValue={editingChild?.color ?? '#7c9db0'} /></Field>
-          <FormActions onCancel={closeModal} submitLabel={editingChild ? 'Save changes' : 'Add child'} />
+          <FormActions onCancel={closeModal} submitLabel={editingChild ? 'Save changes' : 'Add kid'} />
         </form>
       </Modal>
     </>

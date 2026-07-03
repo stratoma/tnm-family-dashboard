@@ -103,16 +103,21 @@ export default function CalendarPage() {
           title={`${view} view`}
           subtitle="Combined family schedule"
           action={
-            <div className="flex rounded-full bg-linen p-1">
-              {views.map((item) => (
-                <button
-                  key={item}
-                  className={`rounded-full px-4 py-2 text-sm font-bold ${view === item ? 'bg-white shadow-soft' : 'text-stone-500'}`}
-                  onClick={() => setView(item)}
-                >
-                  {item}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              <button className="button-primary min-h-10 px-3 py-2 text-sm" onClick={openAddEvent}>
+                <Plus size={16} /> Add event
+              </button>
+              <div className="flex rounded-full bg-linen p-1">
+                {views.map((item) => (
+                  <button
+                    key={item}
+                    className={`rounded-full px-4 py-2 text-sm font-bold ${view === item ? 'bg-white shadow-soft' : 'text-stone-500'}`}
+                    onClick={() => setView(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
           }
         >

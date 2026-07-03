@@ -1,5 +1,6 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Field, FormActions, SelectInput, TextArea, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
@@ -55,7 +56,16 @@ export default function ActivitiesPage() {
 
   return (
     <>
-      <PageHeader title="Kids’ activities" description="A lightweight place for practices, lessons, clubs, locations, and reminders." action={<button className="button-primary" onClick={openAdd}><Plus size={18} /> Add activity</button>} />
+      <PageHeader
+        title="Kids’ activities"
+        description="A lightweight place for practices, lessons, clubs, locations, and reminders."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <button className="button-primary" onClick={openAdd}><Plus size={18} /> Add activity</button>
+            <Link className="button-soft" to="/settings">Manage kids names</Link>
+          </div>
+        }
+      />
       <div className="grid gap-4 md:grid-cols-2">
         {items.map((activity) => (
           <SectionCard key={activity.id} title={activity.activityName} subtitle={`${activity.childName} · ${friendlyDate(activity.dateTime)} at ${friendlyTime(activity.dateTime)}`}>
