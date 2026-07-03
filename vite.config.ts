@@ -78,9 +78,14 @@ function weatherDevPlugin(apiKey?: string): Plugin {
       server.middlewares.use('/api/weather', async (req, res) => {
         try {
           const requestUrl = new URL(req.url ?? '', 'http://localhost');
-          const city = requestUrl.searchParams.get('city')?.trim() || 'New York';
+          const latitude = getDevNumberParam(requestUrl.searchParams.get('lat'));
+          const longitude = getDevNumberParam(requestUrl.searchParams.get('lon'));
+          const query: DevWeatherQuery =
+            latitude !== null && longitude !== null
+              ? { type: 'coords', latitude, longitude }
+              : { type: 'city', city: requestUrl.searchParams.get('city')?.trim() || 'New York' };
           const units = requestUrl.searchParams.get('units') === 'metric' ? 'metric' : 'imperial';
-          const weather = await getDevWeather(city, units, apiKey);
+          const weather = await getDevWeather(query, units, apiKey);
 
           sendJson(res, 200, weather);
         } catch (error) {
@@ -98,21 +103,48 @@ function weatherDevPlugin(apiKey?: string): Plugin {
 
 type WeatherUnits = 'imperial' | 'metric';
 
+type DevWeatherQuery =
+  | {
+      type: 'city';
+      city: string;
+    }
+  | {
+      type: 'coords';
+      latitude: number;
+      longitude: number;
+    };
+
 type DevWeatherProviderError = Error & {
   statusCode?: number;
 };
 
-async function getDevWeather(city: string, units: WeatherUnits, apiKey?: string) {
-  if (apiKey?.trim()) {
-    return getDevOpenWeather(city, units, apiKey);
+function getDevNumberParam(value: string | null) {
+  if (!value?.trim()) {
+    return null;
   }
 
-  return getDevOpenMeteoWeather(city, units);
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue) ? numberValue : null;
 }
 
-async function getDevOpenWeather(city: string, units: WeatherUnits, apiKey: string) {
+async function getDevWeather(query: DevWeatherQuery, units: WeatherUnits, apiKey?: string) {
+  if (apiKey?.trim()) {
+    return getDevOpenWeather(query, units, apiKey);
+  }
+
+  return getDevOpenMeteoWeather(query, units);
+}
+
+async function getDevOpenWeather(query: DevWeatherQuery, units: WeatherUnits, apiKey: string) {
   const url = new URL('https://api.openweathermap.org/data/2.5/weather');
-  url.searchParams.set('q', city);
+  if (query.type === 'city') {
+    url.searchParams.set('q', query.city);
+  } else {
+    url.searchParams.set('lat', String(query.latitude));
+    url.searchParams.set('lon', String(query.longitude));
+  }
+
   url.searchParams.set('appid', apiKey);
   url.searchParams.set('units', units);
 
@@ -132,29 +164,18 @@ async function getDevOpenWeather(city: string, units: WeatherUnits, apiKey: stri
   };
 }
 
-async function getDevOpenMeteoWeather(city: string, units: WeatherUnits) {
-  const geocodingUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
-  geocodingUrl.searchParams.set('name', city);
-  geocodingUrl.searchParams.set('count', '1');
-  geocodingUrl.searchParams.set('language', 'en');
-  geocodingUrl.searchParams.set('format', 'json');
+async function getDevOpenMeteoWeather(query: DevWeatherQuery, units: WeatherUnits) {
+  const place = query.type === 'city' ? await getDevOpenMeteoPlace(query.city) : null;
+  const latitude = query.type === 'coords' ? query.latitude : place?.latitude;
+  const longitude = query.type === 'coords' ? query.longitude : place?.longitude;
 
-  const geocodingResponse = await fetch(geocodingUrl);
-  if (!geocodingResponse.ok) {
-    throw devProviderError(geocodingResponse.status, 'Unable to find that city.');
-  }
-
-  const geocodingData = (await geocodingResponse.json()) as {
-    results?: Array<{ name?: string; admin1?: string; latitude?: number; longitude?: number }>;
-  };
-  const place = geocodingData.results?.[0];
-  if (!place || typeof place.latitude !== 'number' || typeof place.longitude !== 'number') {
-    throw devProviderError(404, 'Unable to find that city.');
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    throw devProviderError(404, 'Unable to find that location.');
   }
 
   const forecastUrl = new URL('https://api.open-meteo.com/v1/forecast');
-  forecastUrl.searchParams.set('latitude', String(place.latitude));
-  forecastUrl.searchParams.set('longitude', String(place.longitude));
+  forecastUrl.searchParams.set('latitude', String(latitude));
+  forecastUrl.searchParams.set('longitude', String(longitude));
   forecastUrl.searchParams.set('current', 'temperature_2m,weather_code');
   forecastUrl.searchParams.set('daily', 'temperature_2m_min,temperature_2m_max');
   forecastUrl.searchParams.set('temperature_unit', units === 'imperial' ? 'fahrenheit' : 'celsius');
@@ -179,12 +200,35 @@ async function getDevOpenMeteoWeather(city: string, units: WeatherUnits) {
   }
 
   return {
-    city: [place.name, place.admin1].filter(Boolean).join(', '),
+    city: place ? [place.name, place.admin1].filter(Boolean).join(', ') : 'Current location',
     temperature: Math.round(temperature),
     low: Math.round(low),
     high: Math.round(high),
     description: weatherCodeDescription(forecastData.current?.weather_code),
   };
+}
+
+async function getDevOpenMeteoPlace(city: string) {
+  const geocodingUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
+  geocodingUrl.searchParams.set('name', city);
+  geocodingUrl.searchParams.set('count', '1');
+  geocodingUrl.searchParams.set('language', 'en');
+  geocodingUrl.searchParams.set('format', 'json');
+
+  const geocodingResponse = await fetch(geocodingUrl);
+  if (!geocodingResponse.ok) {
+    throw devProviderError(geocodingResponse.status, 'Unable to find that city.');
+  }
+
+  const geocodingData = (await geocodingResponse.json()) as {
+    results?: Array<{ name?: string; admin1?: string; latitude?: number; longitude?: number }>;
+  };
+  const place = geocodingData.results?.[0];
+  if (!place || typeof place.latitude !== 'number' || typeof place.longitude !== 'number') {
+    throw devProviderError(404, 'Unable to find that city.');
+  }
+
+  return place;
 }
 
 function devProviderError(statusCode: number, message: string): DevWeatherProviderError {

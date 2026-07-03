@@ -94,7 +94,7 @@ Weather works without an API key by falling back to Open-Meteo. To use OpenWeath
 WEATHER_API_KEY=your-openweather-key
 ```
 
-Weather requests go through `/api/weather?city=New%20York`; never call a provider directly from the frontend with a secret key.
+Weather requests go through `/api/weather?city=New%20York` or `/api/weather?lat=40.7128&lon=-74.0060`; never call a provider directly from the frontend with a secret key. The dashboard can use browser location access or a saved city.
 
 ## Vercel Deployment
 

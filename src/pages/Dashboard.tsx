@@ -12,8 +12,10 @@ import {
   Plus,
   ShoppingBag,
   ShoppingBasket,
+  LocateFixed,
+  Search,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
@@ -31,6 +33,20 @@ type WeatherData = {
   description: string;
   icon?: string;
 };
+
+type WeatherLocation =
+  | {
+      type: 'city';
+      city: string;
+    }
+  | {
+      type: 'coords';
+      latitude: number;
+      longitude: number;
+      label: string;
+    };
+
+const weatherLocationKey = 'family-dashboard-weather-location';
 
 export default function Dashboard() {
   const tasks = readStoredCollection('tasks', tasksSeed);
@@ -207,10 +223,51 @@ export default function Dashboard() {
 
 function WeatherCard() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [location, setLocation] = useState<WeatherLocation | null>(null);
+  const [locationInput, setLocationInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const storedLocation = readWeatherLocation();
+    if (storedLocation) {
+      setLocation(storedLocation);
+      setLocationInput(storedLocation.type === 'city' ? storedLocation.city : '');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocation({ type: 'city', city: 'New York' });
+      setLocationInput('New York');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation: WeatherLocation = {
+          type: 'coords',
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          label: 'Current location',
+        };
+
+        saveWeatherLocation(nextLocation);
+        setLocation(nextLocation);
+      },
+      () => {
+        setLocation({ type: 'city', city: 'New York' });
+        setLocationInput('New York');
+      },
+      { enableHighAccuracy: false, maximumAge: 1000 * 60 * 30, timeout: 7000 },
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!location) {
+      return;
+    }
+
+    const activeLocation = location;
     const controller = new AbortController();
 
     async function loadWeather() {
@@ -218,7 +275,7 @@ function WeatherCard() {
         setIsLoading(true);
         setError(null);
 
-        const data = await fetchWeather(controller.signal);
+        const data = await fetchWeather(activeLocation, controller.signal);
         if (
           typeof data.city !== 'string' ||
           typeof data.temperature !== 'number' ||
@@ -253,10 +310,59 @@ function WeatherCard() {
     void loadWeather();
 
     return () => controller.abort();
-  }, []);
+  }, [location]);
+
+  function submitLocation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const city = locationInput.trim();
+    if (city.length < 2) {
+      setError('Enter a city or town.');
+      return;
+    }
+
+    const nextLocation: WeatherLocation = { type: 'city', city };
+    saveWeatherLocation(nextLocation);
+    setLocation(nextLocation);
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setError('Current location is not available in this browser.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation: WeatherLocation = {
+          type: 'coords',
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          label: 'Current location',
+        };
+
+        saveWeatherLocation(nextLocation);
+        setLocationInput('');
+        setLocation(nextLocation);
+      },
+      () => {
+        setIsLoading(false);
+        setError('Location access was not allowed. Search by city instead.');
+      },
+      { enableHighAccuracy: false, maximumAge: 1000 * 60 * 30, timeout: 7000 },
+    );
+  }
 
   return (
-    <SectionCard title="Weather" subtitle={weather?.city ?? 'New York, NY'} icon={<CloudSun size={21} />} className="bg-skysoft/60">
+    <SectionCard
+      title="Weather"
+      subtitle={weather?.city ?? locationLabel(location) ?? 'Finding location'}
+      icon={<CloudSun size={21} />}
+      className="bg-skysoft/60"
+    >
       {isLoading ? (
         <div className="space-y-4" aria-busy="true">
           <div className="h-14 w-24 animate-pulse rounded-2xl bg-white/70" />
@@ -288,12 +394,89 @@ function WeatherCard() {
           </div>
         </div>
       ) : null}
+      <form onSubmit={submitLocation} className="mt-5 flex gap-2">
+        <input
+          className="input min-h-11 flex-1 rounded-2xl px-3 py-2 text-sm"
+          value={locationInput}
+          onChange={(event) => setLocationInput(event.target.value)}
+          placeholder="City or ZIP"
+          aria-label="Weather location"
+        />
+        <button className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-ink text-white" type="submit" aria-label="Search weather location">
+          <Search size={18} />
+        </button>
+        <button
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-oat bg-white text-ink"
+          type="button"
+          onClick={useCurrentLocation}
+          aria-label="Use current location"
+        >
+          <LocateFixed size={18} />
+        </button>
+      </form>
     </SectionCard>
   );
 }
 
-async function fetchWeather(signal: AbortSignal) {
-  const response = await fetch('/api/weather?city=New%20York&units=imperial', { signal });
+function locationLabel(location: WeatherLocation | null) {
+  if (!location) {
+    return null;
+  }
+
+  return location.type === 'city' ? location.city : location.label;
+}
+
+function readWeatherLocation(): WeatherLocation | null {
+  try {
+    const stored = localStorage.getItem(weatherLocationKey);
+    if (!stored) {
+      return null;
+    }
+
+    const parsed = JSON.parse(stored) as Partial<WeatherLocation>;
+    if (parsed.type === 'city' && typeof parsed.city === 'string' && parsed.city.trim().length >= 2) {
+      return { type: 'city', city: parsed.city.trim() };
+    }
+
+    if (
+      parsed.type === 'coords' &&
+      typeof parsed.latitude === 'number' &&
+      typeof parsed.longitude === 'number' &&
+      Number.isFinite(parsed.latitude) &&
+      Number.isFinite(parsed.longitude)
+    ) {
+      return {
+        type: 'coords',
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
+        label: typeof parsed.label === 'string' ? parsed.label : 'Current location',
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function saveWeatherLocation(location: WeatherLocation) {
+  try {
+    localStorage.setItem(weatherLocationKey, JSON.stringify(location));
+  } catch {
+    // Ignore storage failures; weather can still load for this session.
+  }
+}
+
+async function fetchWeather(location: WeatherLocation, signal: AbortSignal) {
+  const params = new URLSearchParams({ units: 'imperial' });
+  if (location.type === 'city') {
+    params.set('city', location.city);
+  } else {
+    params.set('lat', String(location.latitude));
+    params.set('lon', String(location.longitude));
+  }
+
+  const response = await fetch(`/api/weather?${params.toString()}`, { signal });
   const contentType = response.headers.get('content-type') ?? '';
   const body = contentType.includes('application/json') ? await response.json() : null;
 
