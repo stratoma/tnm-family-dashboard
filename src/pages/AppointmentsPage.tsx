@@ -8,10 +8,11 @@ import StatusPill from '../components/StatusPill';
 import { appointmentsSeed, familyMembers } from '../lib/sampleData';
 import { friendlyDate, friendlyTime } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
-import type { DoctorAppointment } from '../lib/types';
+import type { DoctorAppointment, FamilyMember } from '../lib/types';
 
 export default function AppointmentsPage() {
   const { items, add, update, remove } = useLocalCollection<DoctorAppointment>(appointmentsSeed, 'doctor_appointments');
+  const { items: members } = useLocalCollection<FamilyMember>(familyMembers, 'family_members');
   const [open, setOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<DoctorAppointment | null>(null);
 
@@ -73,7 +74,7 @@ export default function AppointmentsPage() {
       </div>
       <Modal open={open} title={editingAppointment ? 'Edit appointment' : 'Add appointment'} onClose={closeModal}>
         <form onSubmit={submit} className="grid gap-4">
-          <Field label="Person"><SelectInput name="person" defaultValue={editingAppointment?.person}>{familyMembers.map((member) => <option key={member.id}>{member.name}</option>)}</SelectInput></Field>
+          <Field label="Person"><SelectInput name="person" defaultValue={editingAppointment?.person}>{members.map((member) => <option key={member.id}>{member.name}</option>)}</SelectInput></Field>
           <Field label="Doctor"><TextInput name="doctorName" required placeholder="Dr. Rivera" defaultValue={editingAppointment?.doctorName} /></Field>
           <Field label="Type"><TextInput name="appointmentType" required placeholder="Checkup" defaultValue={editingAppointment?.appointmentType} /></Field>
           <Field label="Date and time"><TextInput name="dateTime" type="datetime-local" required defaultValue={editingAppointment?.dateTime} /></Field>

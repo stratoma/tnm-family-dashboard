@@ -1,36 +1,46 @@
 import { Calendar, Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
-import { Field, FormActions, TextInput } from '../components/FormFields';
+import { Field, FormActions, SelectInput, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
-import { calendarSeed } from '../lib/sampleData';
+import { calendarSeed, familyMembers } from '../lib/sampleData';
 import { useLocalCollection } from '../lib/useLocalCollection';
-import type { CalendarEvent, CalendarView } from '../lib/types';
+import type { CalendarEvent, CalendarView, FamilyMember } from '../lib/types';
 import { friendlyDate, friendlyTime } from '../lib/format';
 
 const views: CalendarView[] = ['Today', 'Week', 'Month'];
 
 export default function CalendarPage() {
-  const { items, update, remove } = useLocalCollection<CalendarEvent>(calendarSeed, 'calendar_events');
+  const { items, add, update, remove } = useLocalCollection<CalendarEvent>(calendarSeed, 'calendar_events');
+  const { items: members } = useLocalCollection<FamilyMember>(familyMembers, 'family_members');
   const [view, setView] = useState<CalendarView>('Today');
   const [visibleCalendars, setVisibleCalendars] = useState(['Family', 'Kids', 'Health']);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [manualEventOpen, setManualEventOpen] = useState(false);
   const calendars = Array.from(new Set(items.map((event) => event.calendar)));
 
+  function openAddEvent() {
+    setEditingEvent(null);
+    setManualEventOpen(true);
+  }
+
+  function openEditEvent(event: CalendarEvent) {
+    setEditingEvent(event);
+    setManualEventOpen(true);
+  }
+
   function closeModal() {
+    setManualEventOpen(false);
     setEditingEvent(null);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editingEvent) {
-      return;
-    }
 
     const form = new FormData(event.currentTarget);
-    update(editingEvent.id, {
+    const nextEvent = {
       title: String(form.get('title')),
       calendar: String(form.get('calendar')),
       owner: String(form.get('owner')),
@@ -38,20 +48,33 @@ export default function CalendarPage() {
       end: String(form.get('end')),
       location: String(form.get('location')),
       color: String(form.get('color')),
-    });
+    };
+
+    if (editingEvent) {
+      update(editingEvent.id, nextEvent);
+    } else {
+      add(nextEvent);
+      setVisibleCalendars((current) => (current.includes(nextEvent.calendar) ? current : [...current, nextEvent.calendar]));
+    }
+
     closeModal();
   }
 
   return (
     <>
       <PageHeader
-        eyebrow="Google Calendar sync"
+        eyebrow="Family calendar"
         title="One family calendar"
-        description="Connect multiple Google Calendars, choose which ones to show, and manage local family invites."
+        description="Add events manually, connect Google Calendars, and choose which schedules to show."
         action={
-          <a className="button-primary" href="/api/google/oauth/start">
-            <Plus size={18} /> Connect calendar
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <button className="button-primary" onClick={openAddEvent}>
+              <Plus size={18} /> Add event
+            </button>
+            <a className="button-soft" href="/api/google/oauth/start">
+              <Calendar size={18} /> Connect Google
+            </a>
+          </div>
         }
       />
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -111,7 +134,7 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <StatusPill label={event.calendar} tone="blue" />
-                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => setEditingEvent(event)} aria-label="Edit calendar invite">
+                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEditEvent(event)} aria-label="Edit calendar invite">
                       <Pencil size={17} />
                     </button>
                     <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(event.id)} aria-label="Delete calendar invite">
@@ -123,16 +146,21 @@ export default function CalendarPage() {
           </div>
         </SectionCard>
       </div>
-      <Modal open={Boolean(editingEvent)} title="Edit calendar invite" onClose={closeModal}>
+      <Modal open={manualEventOpen} title={editingEvent ? 'Edit calendar event' : 'Add calendar event'} onClose={closeModal}>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Event title"><TextInput name="title" required defaultValue={editingEvent?.title} /></Field>
-          <Field label="Calendar"><TextInput name="calendar" required defaultValue={editingEvent?.calendar} /></Field>
-          <Field label="Person"><TextInput name="owner" required defaultValue={editingEvent?.owner} /></Field>
+          <Field label="Calendar"><TextInput name="calendar" required placeholder="Family, Kids, Health" defaultValue={editingEvent?.calendar ?? 'Family'} /></Field>
+          <Field label="Person">
+            <SelectInput name="owner" defaultValue={editingEvent?.owner ?? members[0]?.name ?? 'Everyone'}>
+              <option>Everyone</option>
+              {members.map((member) => <option key={member.id}>{member.name}</option>)}
+            </SelectInput>
+          </Field>
           <Field label="Start"><TextInput name="start" type="datetime-local" required defaultValue={editingEvent?.start} /></Field>
           <Field label="End"><TextInput name="end" type="datetime-local" required defaultValue={editingEvent?.end} /></Field>
           <Field label="Location"><TextInput name="location" defaultValue={editingEvent?.location} /></Field>
           <Field label="Color"><TextInput name="color" type="color" defaultValue={editingEvent?.color ?? '#8da089'} /></Field>
-          <FormActions onCancel={closeModal} submitLabel="Save changes" />
+          <FormActions onCancel={closeModal} submitLabel={editingEvent ? 'Save changes' : 'Add event'} />
         </form>
       </Modal>
     </>

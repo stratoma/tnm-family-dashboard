@@ -1,10 +1,10 @@
 import type { Birthday, CalendarEvent, DoctorAppointment, EmailReply, FamilyMember, GroceryItem, HomeProject, KidsActivity, Task } from './types';
 
 export const familyMembers: FamilyMember[] = [
-  { id: 'm1', name: 'Alex', color: '#8da089' },
-  { id: 'm2', name: 'Jordan', color: '#c58f76' },
-  { id: 'm3', name: 'Maya', color: '#7c9db0' },
-  { id: 'm4', name: 'Noah', color: '#d6aa58' },
+  { id: 'm1', name: 'Alex', color: '#8da089', role: 'Adult' },
+  { id: 'm2', name: 'Jordan', color: '#c58f76', role: 'Adult' },
+  { id: 'm3', name: 'Maya', color: '#7c9db0', role: 'Child' },
+  { id: 'm4', name: 'Noah', color: '#d6aa58', role: 'Child' },
 ];
 
 export const tasksSeed: Task[] = [

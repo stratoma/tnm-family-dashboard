@@ -6,6 +6,7 @@ export type FamilyMember = {
   id: string;
   name: string;
   color: string;
+  role: 'Adult' | 'Child';
 };
 
 export type Task = {

@@ -8,10 +8,12 @@ import StatusPill from '../components/StatusPill';
 import { activitiesSeed, familyMembers } from '../lib/sampleData';
 import { friendlyDate, friendlyTime } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
-import type { KidsActivity } from '../lib/types';
+import type { FamilyMember, KidsActivity } from '../lib/types';
 
 export default function ActivitiesPage() {
   const { items, add, update, remove } = useLocalCollection<KidsActivity>(activitiesSeed, 'kids_activities');
+  const { items: members } = useLocalCollection<FamilyMember>(familyMembers, 'family_members');
+  const children = members.filter((member) => member.role === 'Child');
   const [open, setOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<KidsActivity | null>(null);
 
@@ -72,7 +74,11 @@ export default function ActivitiesPage() {
       <Modal open={open} title={editingActivity ? 'Edit activity' : 'Add activity'} onClose={closeModal}>
         <form onSubmit={submit} className="grid gap-4">
           <Field label="Activity"><TextInput name="activityName" required placeholder="Swim lesson" defaultValue={editingActivity?.activityName} /></Field>
-          <Field label="Child"><SelectInput name="childName" defaultValue={editingActivity?.childName}>{familyMembers.slice(2).map((member) => <option key={member.id}>{member.name}</option>)}</SelectInput></Field>
+          <Field label="Child">
+            <SelectInput name="childName" defaultValue={editingActivity?.childName}>
+              {children.map((member) => <option key={member.id}>{member.name}</option>)}
+            </SelectInput>
+          </Field>
           <Field label="Location"><TextInput name="location" required placeholder="Community pool" defaultValue={editingActivity?.location} /></Field>
           <Field label="Date and time"><TextInput name="dateTime" type="datetime-local" required defaultValue={editingActivity?.dateTime} /></Field>
           <Field label="Notes"><TextArea name="notes" placeholder="What should we bring?" defaultValue={editingActivity?.notes} /></Field>

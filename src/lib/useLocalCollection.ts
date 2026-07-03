@@ -16,6 +16,14 @@ export function readStoredCollection<T>(key: string, seed: T[]) {
   }
 }
 
+export function writeStoredCollection<T>(key: string, items: T[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(`${storagePrefix}:${key}`, JSON.stringify(items));
+}
+
 export function useLocalCollection<T extends WithId>(seed: T[], storageKey?: string) {
   const [items, setItems] = useState(() => (storageKey ? readStoredCollection<T>(storageKey, seed) : seed));
 
@@ -24,7 +32,7 @@ export function useLocalCollection<T extends WithId>(seed: T[], storageKey?: str
       return;
     }
 
-    window.localStorage.setItem(`${storagePrefix}:${storageKey}`, JSON.stringify(items));
+    writeStoredCollection(storageKey, items);
   }, [items, storageKey]);
 
   const actions = useMemo(
