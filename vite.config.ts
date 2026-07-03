@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [react(), accessCodeDevPlugin(env.ACCESS_CODE)],
+    plugins: [react(), accessCodeDevPlugin(env.ACCESS_CODE), weatherDevPlugin(env.WEATHER_API_KEY)],
   };
 });
 
@@ -69,4 +69,46 @@ function sendJson(res: { statusCode: number; setHeader(name: string, value: stri
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(body));
+}
+
+function weatherDevPlugin(apiKey?: string): Plugin {
+  return {
+    name: 'family-dashboard-weather-dev',
+    configureServer(server) {
+      server.middlewares.use('/api/weather', async (req, res) => {
+        try {
+          if (!apiKey) {
+            sendJson(res, 500, { error: 'Missing WEATHER_API_KEY.' });
+            return;
+          }
+
+          const requestUrl = new URL(req.url ?? '', 'http://localhost');
+          const city = requestUrl.searchParams.get('city')?.trim() || 'New York';
+          const units = requestUrl.searchParams.get('units') === 'metric' ? 'metric' : 'imperial';
+          const weatherUrl = new URL('https://api.openweathermap.org/data/2.5/weather');
+          weatherUrl.searchParams.set('q', city);
+          weatherUrl.searchParams.set('appid', apiKey);
+          weatherUrl.searchParams.set('units', units);
+
+          const response = await fetch(weatherUrl);
+          if (!response.ok) {
+            sendJson(res, response.status, { error: 'Weather provider request failed.' });
+            return;
+          }
+
+          const data = await response.json();
+          sendJson(res, 200, {
+            city: data.name,
+            temperature: Math.round(data.main.temp),
+            low: Math.round(data.main.temp_min),
+            high: Math.round(data.main.temp_max),
+            description: data.weather?.[0]?.description ?? 'Weather unavailable',
+            icon: data.weather?.[0]?.icon,
+          });
+        } catch (error) {
+          sendJson(res, 400, { error: error instanceof Error ? error.message : 'Unable to load weather.' });
+        }
+      });
+    },
+  };
 }

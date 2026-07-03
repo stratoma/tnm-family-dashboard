@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   ShoppingBasket,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
@@ -21,6 +22,15 @@ import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, grocer
 import { currency, daysUntil, friendlyDate, friendlyTime } from '../lib/format';
 import { readStoredCollection } from '../lib/useLocalCollection';
 import type { GroceryCategory, ProjectStatus } from '../lib/types';
+
+type WeatherData = {
+  city: string;
+  temperature: number;
+  low: number;
+  high: number;
+  description: string;
+  icon?: string;
+};
 
 export default function Dashboard() {
   const tasks = readStoredCollection('tasks', tasksSeed);
@@ -64,15 +74,7 @@ export default function Dashboard() {
       />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[330px_minmax(0,1fr)]">
         <div className="grid min-w-0 gap-4">
-          <SectionCard title="Weather" subtitle="New York, NY" icon={<CloudSun size={21} />} className="bg-skysoft/60">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-5xl font-semibold">74°</p>
-                <p className="mt-2 text-stone-600">Partly sunny.</p>
-              </div>
-              <div className="rounded-3xl bg-white/70 px-4 py-3 text-sm font-semibold">Low 66°</div>
-            </div>
-          </SectionCard>
+          <WeatherCard />
           <SectionCard title="Grocery preview" subtitle={`${groceries.length} still needed`} icon={<ShoppingBasket size={21} />}>
             <div className="grid gap-3">
               {groceries.map((item) => (
@@ -200,6 +202,101 @@ export default function Dashboard() {
         </SectionCard>
       </div>
     </>
+  );
+}
+
+function WeatherCard() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadWeather() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch('/api/weather?city=New%20York&units=imperial', {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Weather unavailable');
+        }
+
+        const data = (await response.json()) as Partial<WeatherData>;
+        if (
+          typeof data.city !== 'string' ||
+          typeof data.temperature !== 'number' ||
+          typeof data.low !== 'number' ||
+          typeof data.high !== 'number' ||
+          typeof data.description !== 'string'
+        ) {
+          throw new Error('Unexpected weather response');
+        }
+
+        setWeather({
+          city: data.city,
+          temperature: data.temperature,
+          low: data.low,
+          high: data.high,
+          description: data.description,
+          icon: typeof data.icon === 'string' ? data.icon : undefined,
+        });
+      } catch (caughtError) {
+        if (caughtError instanceof DOMException && caughtError.name === 'AbortError') {
+          return;
+        }
+
+        setError('Weather is not available right now.');
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadWeather();
+
+    return () => controller.abort();
+  }, []);
+
+  return (
+    <SectionCard title="Weather" subtitle={weather?.city ?? 'New York, NY'} icon={<CloudSun size={21} />} className="bg-skysoft/60">
+      {isLoading ? (
+        <div className="space-y-4" aria-busy="true">
+          <div className="h-14 w-24 animate-pulse rounded-2xl bg-white/70" />
+          <div className="h-5 w-36 animate-pulse rounded-full bg-white/70" />
+        </div>
+      ) : error ? (
+        <div className="rounded-3xl bg-white/70 p-4">
+          <p className="font-semibold text-stone-700">{error}</p>
+          <p className="mt-1 text-sm text-stone-500">Check the weather API configuration in deployment settings.</p>
+        </div>
+      ) : weather ? (
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-5xl font-semibold">{weather.temperature}°</p>
+              {weather.icon ? (
+                <img
+                  src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                  alt=""
+                  className="h-14 w-14 shrink-0"
+                  loading="lazy"
+                />
+              ) : null}
+            </div>
+            <p className="mt-2 capitalize text-stone-600">{weather.description}</p>
+          </div>
+          <div className="shrink-0 rounded-3xl bg-white/70 px-4 py-3 text-sm font-semibold">
+            Low {weather.low}° / High {weather.high}°
+          </div>
+        </div>
+      ) : null}
+    </SectionCard>
   );
 }
 
