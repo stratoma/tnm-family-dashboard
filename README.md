@@ -88,14 +88,13 @@ The app requests read-only calendar access. It stores refresh tokens in `google_
 
 ## Weather Setup
 
-1. Create an OpenWeather API key.
-2. Add:
+Weather works without an API key by falling back to Open-Meteo. To use OpenWeather instead, create an OpenWeather API key and add:
 
 ```bash
 WEATHER_API_KEY=your-openweather-key
 ```
 
-Weather requests should go through `/api/weather?city=New%20York`; never call the provider directly from the frontend with the secret key.
+Weather requests go through `/api/weather?city=New%20York`; never call a provider directly from the frontend with a secret key.
 
 ## Vercel Deployment
 
