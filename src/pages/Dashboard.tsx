@@ -218,15 +218,7 @@ function WeatherCard() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch('/api/weather?city=New%20York&units=imperial', {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error('Weather unavailable');
-        }
-
-        const data = (await response.json()) as Partial<WeatherData>;
+        const data = await fetchWeather(controller.signal);
         if (
           typeof data.city !== 'string' ||
           typeof data.temperature !== 'number' ||
@@ -250,7 +242,7 @@ function WeatherCard() {
           return;
         }
 
-        setError('Weather is not available right now.');
+        setError(caughtError instanceof Error ? caughtError.message : 'Weather is not available right now.');
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
@@ -272,8 +264,8 @@ function WeatherCard() {
         </div>
       ) : error ? (
         <div className="rounded-3xl bg-white/70 p-4">
-          <p className="font-semibold text-stone-700">{error}</p>
-          <p className="mt-1 text-sm text-stone-500">Check the weather API configuration in deployment settings.</p>
+          <p className="font-semibold text-stone-700">Weather is not available right now.</p>
+          <p className="mt-1 text-sm text-stone-500">{error}</p>
         </div>
       ) : weather ? (
         <div className="flex items-end justify-between gap-4">
@@ -298,6 +290,19 @@ function WeatherCard() {
       ) : null}
     </SectionCard>
   );
+}
+
+async function fetchWeather(signal: AbortSignal) {
+  const response = await fetch('/api/weather?city=New%20York&units=imperial', { signal });
+  const contentType = response.headers.get('content-type') ?? '';
+  const body = contentType.includes('application/json') ? await response.json() : null;
+
+  if (!response.ok) {
+    const message = typeof body?.error === 'string' ? body.error : 'The weather service did not respond successfully.';
+    throw new Error(message);
+  }
+
+  return body as Partial<WeatherData>;
 }
 
 function Stack({ children }: { children: React.ReactNode }) {
