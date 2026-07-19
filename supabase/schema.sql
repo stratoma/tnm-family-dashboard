@@ -32,6 +32,8 @@ create table public.kids_activities (
   activity_name text not null,
   child_name text not null,
   location text,
+  address text,
+  frequency text not null default 'Weekly' check (frequency in ('One-time', 'Weekly', 'Biweekly', 'Monthly')),
   date_time timestamptz not null,
   notes text,
   reminder boolean not null default true,

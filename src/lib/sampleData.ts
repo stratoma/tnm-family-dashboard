@@ -20,8 +20,8 @@ export const calendarSeed: CalendarEvent[] = [
 ];
 
 export const activitiesSeed: KidsActivity[] = [
-  { id: 'a1', activityName: 'Soccer practice', childName: 'Maya', location: 'Oak Park', dateTime: '2026-06-21T16:30:00', notes: 'Bring cleats and water bottle.', reminder: true },
-  { id: 'a2', activityName: 'Piano lesson', childName: 'Noah', location: 'Ms. Kim studio', dateTime: '2026-06-24T15:45:00', notes: 'Practice book is in backpack.', reminder: true },
+  { id: 'a1', activityName: 'Soccer practice', childName: 'Maya', location: 'Oak Park', address: '240 Oak Park Drive', frequency: 'Weekly', dateTime: '2026-06-21T16:30:00', notes: 'Bring cleats and water bottle.', reminder: true },
+  { id: 'a2', activityName: 'Piano lesson', childName: 'Noah', location: 'Ms. Kim studio', address: '18 Cedar Lane', frequency: 'Weekly', dateTime: '2026-06-24T15:45:00', notes: 'Practice book is in backpack.', reminder: true },
 ];
 
 export const appointmentsSeed: DoctorAppointment[] = [

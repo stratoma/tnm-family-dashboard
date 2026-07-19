@@ -1,6 +1,7 @@
 export type Priority = 'Low' | 'Medium' | 'High';
 export type ProjectStatus = 'Not Started' | 'In Progress' | 'Waiting' | 'Done';
 export type CalendarView = 'Today' | 'Week' | 'Month';
+export type ActivityFrequency = 'One-time' | 'Weekly' | 'Biweekly' | 'Monthly';
 
 export type FamilyMember = {
   id: string;
@@ -34,6 +35,8 @@ export type KidsActivity = {
   activityName: string;
   childName: string;
   location: string;
+  address: string;
+  frequency: ActivityFrequency;
   dateTime: string;
   notes: string;
   reminder: boolean;

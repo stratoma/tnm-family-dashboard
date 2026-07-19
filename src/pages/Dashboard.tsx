@@ -48,6 +48,10 @@ type WeatherLocation =
 
 const weatherLocationKey = 'family-dashboard-weather-location';
 
+function activityMeta(activity: { childName: string; dateTime: string; location: string; frequency?: string }) {
+  return `Kids · ${activity.childName} · ${friendlyTime(activity.dateTime)} · ${activity.frequency || 'One-time'} · ${activity.location}`;
+}
+
 export default function Dashboard() {
   const tasks = readStoredCollection('tasks', tasksSeed);
   const calendarEvents = readStoredCollection('calendar_events', calendarSeed);
@@ -148,7 +152,7 @@ export default function Dashboard() {
                 <Row
                   key={activity.id}
                   title={activity.activityName}
-                  meta={`Kids · ${activity.childName} · ${friendlyTime(activity.dateTime)} · ${activity.location}`}
+                  meta={activityMeta(activity)}
                 />
               ))}
               {todayTasks.map((task) => (
@@ -168,7 +172,7 @@ export default function Dashboard() {
                 <Row
                   key={activity.id}
                   title={activity.activityName}
-                  meta={`Kids · ${activity.childName} · ${friendlyTime(activity.dateTime)} · ${activity.location}`}
+                  meta={activityMeta(activity)}
                 />
               ))}
               {tomorrowTasks.map((task) => (

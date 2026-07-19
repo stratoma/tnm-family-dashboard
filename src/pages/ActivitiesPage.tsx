@@ -9,7 +9,9 @@ import StatusPill from '../components/StatusPill';
 import { activitiesSeed, familyMembers } from '../lib/sampleData';
 import { friendlyDate, friendlyTime } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
-import type { FamilyMember, KidsActivity } from '../lib/types';
+import type { ActivityFrequency, FamilyMember, KidsActivity } from '../lib/types';
+
+const activityFrequencies: ActivityFrequency[] = ['One-time', 'Weekly', 'Biweekly', 'Monthly'];
 
 export default function ActivitiesPage() {
   const { items, add, update, remove } = useLocalCollection<KidsActivity>(activitiesSeed, 'kids_activities');
@@ -40,6 +42,8 @@ export default function ActivitiesPage() {
       activityName: String(form.get('activityName')),
       childName: String(form.get('childName')),
       location: String(form.get('location')),
+      address: String(form.get('address')),
+      frequency: String(form.get('frequency')) as ActivityFrequency,
       dateTime: String(form.get('dateTime')),
       notes: String(form.get('notes')),
       reminder: form.get('reminder') === 'on',
@@ -69,7 +73,11 @@ export default function ActivitiesPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {items.map((activity) => (
           <SectionCard key={activity.id} title={activity.activityName} subtitle={`${activity.childName} · ${friendlyDate(activity.dateTime)} at ${friendlyTime(activity.dateTime)}`}>
-            <p className="text-stone-600">{activity.location}</p>
+            <div className="grid gap-2 text-sm text-stone-600">
+              <p><span className="font-semibold text-stone-700">Location:</span> {activity.location}</p>
+              <p><span className="font-semibold text-stone-700">Address:</span> {activity.address || 'Address not set'}</p>
+              <p><span className="font-semibold text-stone-700">Frequency:</span> {activity.frequency || 'One-time'}</p>
+            </div>
             <p className="mt-3 rounded-2xl bg-linen p-3 text-sm text-stone-600">{activity.notes || 'No notes yet.'}</p>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               {activity.reminder ? <StatusPill label="Reminder on" tone="green" /> : <StatusPill label="No reminder" tone="neutral" />}
@@ -90,6 +98,12 @@ export default function ActivitiesPage() {
             </SelectInput>
           </Field>
           <Field label="Location"><TextInput name="location" required placeholder="Community pool" defaultValue={editingActivity?.location} /></Field>
+          <Field label="Address"><TextInput name="address" required placeholder="123 Main Street" defaultValue={editingActivity?.address} /></Field>
+          <Field label="Frequency">
+            <SelectInput name="frequency" defaultValue={editingActivity?.frequency ?? 'Weekly'}>
+              {activityFrequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}
+            </SelectInput>
+          </Field>
           <Field label="Date and time"><TextInput name="dateTime" type="datetime-local" required defaultValue={editingActivity?.dateTime} /></Field>
           <Field label="Notes"><TextArea name="notes" placeholder="What should we bring?" defaultValue={editingActivity?.notes} /></Field>
           <label className="flex items-center gap-3 rounded-2xl bg-linen p-4 font-semibold"><input name="reminder" type="checkbox" className="h-5 w-5" defaultChecked={editingActivity?.reminder ?? true} /> Reminder</label>
