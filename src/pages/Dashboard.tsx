@@ -22,7 +22,7 @@ import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
 import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, groceriesSeed, projectsSeed, tasksSeed, activitiesSeed } from '../lib/sampleData';
 import { currency, daysUntil, friendlyDate, friendlyTime } from '../lib/format';
-import { readStoredCollection } from '../lib/useLocalCollection';
+import { useLocalCollection } from '../lib/useLocalCollection';
 import type { GroceryCategory, ProjectStatus } from '../lib/types';
 
 type WeatherData = {
@@ -53,13 +53,13 @@ function activityMeta(activity: { childName: string; dateTime: string; location:
 }
 
 export default function Dashboard() {
-  const tasks = readStoredCollection('tasks', tasksSeed);
-  const calendarEvents = readStoredCollection('calendar_events', calendarSeed);
-  const activities = readStoredCollection('kids_activities', activitiesSeed);
-  const appointments = readStoredCollection('doctor_appointments', appointmentsSeed);
-  const birthdays = readStoredCollection('birthdays', birthdaysSeed);
-  const groceryItems = readStoredCollection('grocery_items', groceriesSeed);
-  const projects = readStoredCollection('home_projects', projectsSeed);
+  const { items: tasks } = useLocalCollection(tasksSeed, 'tasks');
+  const { items: calendarEvents } = useLocalCollection(calendarSeed, 'calendar_events');
+  const { items: activities } = useLocalCollection(activitiesSeed, 'kids_activities');
+  const { items: appointments } = useLocalCollection(appointmentsSeed, 'doctor_appointments');
+  const { items: birthdays } = useLocalCollection(birthdaysSeed, 'birthdays');
+  const { items: groceryItems } = useLocalCollection(groceriesSeed, 'grocery_items');
+  const { items: projects } = useLocalCollection(projectsSeed, 'home_projects');
   const today = new Date();
   const tomorrow = addDays(today, 1);
   const todayTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), today));

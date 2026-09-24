@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "remotion:studio": "remotion studio src/remotion/index.tsx",
+    "remotion:render": "remotion render src/remotion/index.tsx OfferScene out/offer-scene.mp4",
+    "remotion:render:community": "remotion render src/remotion/index.tsx CommunityScrollCloseUp out/community-scroll-close-up.mp4",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "eslint ."
   },
@@ -14,14 +17,17 @@
     "@vitejs/plugin-react": "^4.6.0",
     "date-fns": "^4.1.0",
     "googleapis": "^140.0.1",
+    "hyperframes": "^0.7.27",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1",
-    "zod": "^3.25.67"
+    "remotion": "4.0.484",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@remotion/cli": "4.0.484",
     "@types/node": "^22.15.32",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

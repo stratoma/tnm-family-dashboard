@@ -57,9 +57,14 @@ SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_URL=your-project-url
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+FAMILY_USER_ID=auth-user-uuid-for-this-family
+ACCESS_CODE=your-private-family-access-code
 ```
 
 Keep `SUPABASE_SERVICE_ROLE_KEY` server-side only. Do not expose it with a `VITE_` prefix.
+The app writes persistent dashboard data through `/api/collections/:collection`, which requires `ACCESS_CODE`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `FAMILY_USER_ID` on the server. If those values are missing, the UI falls back to browser `localStorage`.
 
 ## Google Calendar OAuth Setup
 
@@ -137,4 +142,4 @@ dist
 
 ## Notes
 
-The current UI uses local seed data so the dashboard is usable immediately. The Supabase client and serverless routes are ready for replacing local state with authenticated reads and writes. Google Calendar is intentionally read-only; event editing should be added as a separate explicit feature.
+The UI uses Supabase-backed serverless routes for persistent collections when the server environment is configured. Browser `localStorage` remains as a local fallback so the dashboard is usable immediately. Google Calendar is intentionally read-only; event editing should be added as a separate explicit feature.

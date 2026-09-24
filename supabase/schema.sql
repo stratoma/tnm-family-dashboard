@@ -12,6 +12,7 @@ create table public.family_members (
   user_id uuid not null references public.users(id) on delete cascade,
   name text not null,
   color text not null default '#8da089',
+  role text not null default 'Child' check (role in ('Adult', 'Child')),
   created_at timestamptz not null default now()
 );
 
@@ -19,6 +20,7 @@ create table public.tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   title text not null,
+  assignee text not null default 'Unassigned',
   assignee_id uuid references public.family_members(id) on delete set null,
   priority text not null check (priority in ('Low', 'Medium', 'High')),
   due_date date,
@@ -37,6 +39,19 @@ create table public.kids_activities (
   date_time timestamptz not null,
   notes text,
   reminder boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table public.calendar_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  title text not null,
+  calendar text not null default 'Family',
+  owner text not null default 'Everyone',
+  start_time timestamptz not null,
+  end_time timestamptz not null,
+  color text not null default '#8da089',
+  location text,
   created_at timestamptz not null default now()
 );
 
@@ -129,6 +144,7 @@ create table public.user_calendar_preferences (
 alter table public.users enable row level security;
 alter table public.family_members enable row level security;
 alter table public.tasks enable row level security;
+alter table public.calendar_events enable row level security;
 alter table public.kids_activities enable row level security;
 alter table public.doctor_appointments enable row level security;
 alter table public.birthdays enable row level security;
@@ -140,42 +156,46 @@ alter table public.cal_calendar_connections enable row level security;
 alter table public.user_calendar_preferences enable row level security;
 
 create policy "Users can manage themselves" on public.users
-  for all using (auth.uid() = id) with check (auth.uid() = id);
+  for all to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 
 create policy "Users own family members" on public.family_members
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own tasks" on public.tasks
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+create policy "Users own calendar events" on public.calendar_events
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own kids activities" on public.kids_activities
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own doctor appointments" on public.doctor_appointments
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own birthdays" on public.birthdays
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own grocery items" on public.grocery_items
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own home projects" on public.home_projects
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users own project tasks" on public.project_tasks
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 create policy "Users can read calendar connections" on public.google_calendar_connections
-  for select using (auth.uid() = user_id);
+  for select to authenticated using ((select auth.uid()) = user_id);
 
 -- Customer API keys are only read and written through server routes using the service-role key.
 -- No client policy is intentionally defined for this encrypted credentials table.
 
 create policy "Users can read calendar preferences" on public.user_calendar_preferences
-  for select using (auth.uid() = user_id);
+  for select to authenticated using ((select auth.uid()) = user_id);
 
 create index tasks_user_due_idx on public.tasks(user_id, due_date);
+create index calendar_events_user_start_idx on public.calendar_events(user_id, start_time);
 create index activities_user_date_idx on public.kids_activities(user_id, date_time);
 create index appointments_user_date_idx on public.doctor_appointments(user_id, date_time);
 create index grocery_user_category_idx on public.grocery_items(user_id, category);

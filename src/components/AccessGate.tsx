@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { LockKeyhole, Sparkles } from 'lucide-react';
 
 const accessKey = 'family-dashboard-access';
+const accessCodeKey = 'family-dashboard-access-code';
 
 type AccessGateProps = {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export default function AccessGate({ children }: AccessGateProps) {
       }
 
       sessionStorage.setItem(accessKey, 'granted');
+      sessionStorage.setItem(accessCodeKey, providedAccessCode(code));
       setHasAccess(true);
       setCode('');
     } catch {
@@ -94,4 +96,8 @@ export default function AccessGate({ children }: AccessGateProps) {
       </div>
     </div>
   );
+}
+
+function providedAccessCode(code: string) {
+  return code.trim();
 }
