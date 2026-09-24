@@ -105,6 +105,15 @@ create table public.google_calendar_connections (
   unique (user_id, google_email)
 );
 
+create table public.cal_calendar_connections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.users(id) on delete cascade,
+  encrypted_api_key text not null,
+  key_hint text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table public.user_calendar_preferences (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
@@ -127,6 +136,7 @@ alter table public.grocery_items enable row level security;
 alter table public.home_projects enable row level security;
 alter table public.project_tasks enable row level security;
 alter table public.google_calendar_connections enable row level security;
+alter table public.cal_calendar_connections enable row level security;
 alter table public.user_calendar_preferences enable row level security;
 
 create policy "Users can manage themselves" on public.users
@@ -159,6 +169,9 @@ create policy "Users own project tasks" on public.project_tasks
 create policy "Users can read calendar connections" on public.google_calendar_connections
   for select using (auth.uid() = user_id);
 
+-- Customer API keys are only read and written through server routes using the service-role key.
+-- No client policy is intentionally defined for this encrypted credentials table.
+
 create policy "Users can read calendar preferences" on public.user_calendar_preferences
   for select using (auth.uid() = user_id);
 
@@ -167,3 +180,4 @@ create index activities_user_date_idx on public.kids_activities(user_id, date_ti
 create index appointments_user_date_idx on public.doctor_appointments(user_id, date_time);
 create index grocery_user_category_idx on public.grocery_items(user_id, category);
 create index calendar_connections_user_idx on public.google_calendar_connections(user_id);
+create index cal_connections_user_idx on public.cal_calendar_connections(user_id);

@@ -11,6 +11,7 @@ A minimalist family command center built with React, TypeScript, Tailwind CSS, S
 - Server-side weather proxy so API keys are never exposed in the browser
 - Private access-code gate checked by a serverless API route
 - Google OAuth routes with read-only calendar scope and token refresh handling
+- Cal.com booking sync through a server-side API route
 - Supabase schema with row-level security
 
 ## Tech Stack
@@ -85,6 +86,24 @@ GOOGLE_REDIRECT_URI=https://your-domain.vercel.app/api/google/oauth/callback
 ```
 
 The app requests read-only calendar access. It stores refresh tokens in `google_calendar_connections` and refreshes expired access tokens on the server.
+
+## Cal.com Calendar Sync
+
+The Calendar page can show upcoming Cal.com bookings beside family events. The integration is read-only, so editing or deleting an event in this dashboard will not change its booking in Cal.com.
+
+1. Sign in to [Cal.com](https://app.cal.com/).
+2. Go to **Settings** → **Security** → **API Keys** and create an API key.
+3. Paste the key into **Settings** → **Cal.com** → **Set up** and select **Connect Cal.com**.
+4. Return to Calendar and select **Sync Cal.com**.
+
+The dashboard verifies each key with Cal.com, encrypts it before storage, and only shows a masked key hint later. Configure one server-only deployment secret before allowing customer connections:
+
+```bash
+# Generate with: openssl rand -base64 32
+CAL_CONNECTION_ENCRYPTION_KEY=base64-encoded-32-byte-key
+```
+
+Never add this encryption key with a `VITE_` prefix or expose it to the browser.
 
 ## Weather Setup
 

@@ -2,6 +2,7 @@ export type VercelRequest = {
   method?: string;
   query: Record<string, string | string[] | undefined>;
   body?: unknown;
+  headers?: Record<string, string | string[] | undefined>;
 };
 
 export type VercelResponse = {

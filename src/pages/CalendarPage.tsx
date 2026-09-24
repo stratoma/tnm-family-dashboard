@@ -1,4 +1,4 @@
-import { Calendar, Check, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Check, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Field, FormActions, SelectInput, TextInput } from '../components/FormFields';
 import Modal from '../components/Modal';
@@ -19,7 +19,36 @@ export default function CalendarPage() {
   const [visibleCalendars, setVisibleCalendars] = useState(['Family', 'Kids', 'Health']);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [manualEventOpen, setManualEventOpen] = useState(false);
-  const calendars = Array.from(new Set(items.map((event) => event.calendar)));
+  const [calEvents, setCalEvents] = useState<CalendarEvent[]>([]);
+  const [calError, setCalError] = useState('');
+  const [syncingCal, setSyncingCal] = useState(false);
+  const [calSyncedAt, setCalSyncedAt] = useState('');
+  const events = [...items, ...calEvents].sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
+  const calendars = Array.from(new Set(events.map((event) => event.calendar)));
+
+  async function syncCal() {
+    setSyncingCal(true);
+    setCalError('');
+
+    try {
+      const accessCode = window.sessionStorage.getItem('family-dashboard-access-code') ?? '';
+      const response = await fetch('/api/cal/bookings?days=30', {
+        headers: accessCode ? { 'x-family-access-code': accessCode } : {},
+      });
+      const payload = await response.json() as { events?: CalendarEvent[]; syncedAt?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Unable to sync Cal.com bookings.');
+      }
+
+      setCalEvents(payload.events ?? []);
+      setCalSyncedAt(payload.syncedAt ?? new Date().toISOString());
+      setVisibleCalendars((current) => (current.includes('Cal.com') ? current : [...current, 'Cal.com']));
+    } catch (error) {
+      setCalError(error instanceof Error ? error.message : 'Unable to sync Cal.com bookings.');
+    } finally {
+      setSyncingCal(false);
+    }
+  }
 
   function openAddEvent() {
     setEditingEvent(null);
@@ -65,7 +94,7 @@ export default function CalendarPage() {
       <PageHeader
         eyebrow="Family calendar"
         title="One family calendar"
-        description="Add events manually, connect Google Calendars, and choose which schedules to show."
+        description="Add family events, connect Google, and sync upcoming Cal.com bookings in one place."
         action={
           <div className="flex flex-wrap gap-2">
             <button className="button-primary" onClick={openAddEvent}>
@@ -74,6 +103,9 @@ export default function CalendarPage() {
             <a className="button-soft" href="/api/google/oauth/start">
               <Calendar size={18} /> Connect Google
             </a>
+            <button className="button-soft" onClick={syncCal} disabled={syncingCal}>
+              <RefreshCw size={18} className={syncingCal ? 'animate-spin' : ''} /> {syncingCal ? 'Syncing…' : 'Sync Cal.com'}
+            </button>
           </div>
         }
       />
@@ -121,8 +153,19 @@ export default function CalendarPage() {
             </div>
           }
         >
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sky/10 p-3 text-sm text-stone-600">
+            <span>{calSyncedAt ? `Cal.com updated ${friendlyTime(calSyncedAt)}.` : 'Cal.com bookings are read-only in this dashboard.'}</span>
+            <button className="font-semibold text-ink underline underline-offset-4" onClick={syncCal} disabled={syncingCal}>
+              {syncingCal ? 'Syncing…' : 'Refresh'}
+            </button>
+          </div>
+          {calError ? (
+            <div className="mb-4 rounded-2xl border border-clay/30 bg-clay/10 p-3 text-sm text-clay">
+              {calError} <a className="font-semibold underline underline-offset-4" href="/settings">Set up Cal.com</a>
+            </div>
+          ) : null}
           <div className="grid gap-3">
-            {items
+            {events
               .filter((event) => visibleCalendars.includes(event.calendar))
               .map((event) => (
                 <div key={event.id} className="grid gap-3 rounded-3xl bg-linen/60 p-4 sm:grid-cols-[120px_1fr_auto] sm:items-center">
@@ -139,12 +182,14 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <StatusPill label={event.calendar} tone="blue" />
-                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEditEvent(event)} aria-label="Edit calendar invite">
-                      <Pencil size={17} />
-                    </button>
-                    <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(event.id)} aria-label="Delete calendar invite">
-                      <Trash2 size={17} />
-                    </button>
+                    {event.source === 'cal.com' ? <span className="text-xs font-semibold text-stone-400">Read-only</span> : <>
+                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEditEvent(event)} aria-label="Edit calendar invite">
+                        <Pencil size={17} />
+                      </button>
+                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(event.id)} aria-label="Delete calendar invite">
+                        <Trash2 size={17} />
+                      </button>
+                    </>}
                   </div>
                 </div>
               ))}

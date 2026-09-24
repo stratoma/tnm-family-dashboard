@@ -28,6 +28,7 @@ export type CalendarEvent = {
   end: string;
   color: string;
   location?: string;
+  source?: 'manual' | 'cal.com';
 };
 
 export type KidsActivity = {
