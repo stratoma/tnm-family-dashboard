@@ -7,6 +7,7 @@ import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
 import { calendarSeed, appointmentsSeed, activitiesSeed, familyMembers } from '../lib/sampleData';
 import { readStoredCollection, useLocalCollection, writeStoredCollection } from '../lib/useLocalCollection';
+import { apiResponseError, readJsonResponse } from '../lib/http';
 import type { CalendarEvent, DoctorAppointment, FamilyMember, KidsActivity } from '../lib/types';
 
 export default function SettingsPage() {
@@ -71,8 +72,8 @@ export default function SettingsPage() {
     try {
       const response = await fetch('/api/cal/connection', { headers: familyAccessHeader() });
       if (!response.ok) return;
-      const data = await response.json() as { connection?: { key_hint: string; updated_at: string } | null };
-      setCalConnection(data.connection ?? null);
+      const data = await readJsonResponse<{ connection?: { key_hint: string; updated_at: string } | null }>(response);
+      setCalConnection(data?.connection ?? null);
     } catch {
       // Connection status is optional until the server-side services are configured.
     }
@@ -89,8 +90,9 @@ export default function SettingsPage() {
         headers: { ...familyAccessHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: calApiKey }),
       });
-      const data = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(data.error ?? 'Unable to connect Cal.com.');
+      const data = await readJsonResponse<{ error?: string }>(response);
+      if (!response.ok) throw new Error(data?.error ?? apiResponseError(response, 'Unable to connect Cal.com.'));
+      if (!data) throw new Error(apiResponseError(response, 'Cal.com returned an unexpected response.'));
 
       setCalApiKey('');
       await loadCalConnection();

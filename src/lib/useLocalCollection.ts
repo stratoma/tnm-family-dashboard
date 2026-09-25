@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { apiResponseError, readJsonResponse } from './http';
 
 type WithId = { id: string };
 const storagePrefix = 'family-dashboard';
@@ -163,7 +164,11 @@ async function fetchCollection<T>(key: string) {
     throw new Error(await readError(response));
   }
 
-  const result = (await response.json()) as { items?: T[] };
+  const result = await readJsonResponse<{ items?: T[] }>(response);
+  if (!result) {
+    throw new Error(apiResponseError(response, 'Persistent storage returned an unexpected response.'));
+  }
+
   return result.items ?? [];
 }
 
@@ -190,7 +195,11 @@ async function requestCollection<T>(
     return null;
   }
 
-  const result = (await response.json()) as { item?: T };
+  const result = await readJsonResponse<{ item?: T }>(response);
+  if (!result) {
+    throw new Error(apiResponseError(response, 'Persistent storage returned an unexpected response.'));
+  }
+
   return result.item ?? null;
 }
 
@@ -201,8 +210,8 @@ function collectionHeaders(): Record<string, string> {
 
 async function readError(response: Response) {
   try {
-    const result = (await response.json()) as { error?: string };
-    return result.error ?? 'Persistent storage is unavailable.';
+    const result = await readJsonResponse<{ error?: string }>(response);
+    return result?.error ?? apiResponseError(response, 'Persistent storage is unavailable.');
   } catch {
     return 'Persistent storage is unavailable.';
   }

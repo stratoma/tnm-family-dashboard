@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { LockKeyhole, Sparkles } from 'lucide-react';
+import { apiResponseError, readJsonResponse } from '../lib/http';
 
 const accessKey = 'family-dashboard-access';
 const accessCodeKey = 'family-dashboard-access-code';
@@ -29,10 +30,10 @@ export default function AccessGate({ children }: AccessGateProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
       });
-      const result = (await response.json()) as { ok?: boolean; error?: string };
+      const result = await readJsonResponse<{ ok?: boolean; error?: string }>(response);
 
-      if (!response.ok || !result.ok) {
-        setError(result.error ?? 'Unable to verify that code.');
+      if (!response.ok || !result?.ok) {
+        setError(result?.error ?? apiResponseError(response, 'Unable to verify that code.'));
         return;
       }
 

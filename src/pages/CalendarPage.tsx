@@ -9,6 +9,7 @@ import { calendarSeed, familyMembers } from '../lib/sampleData';
 import { useLocalCollection } from '../lib/useLocalCollection';
 import type { CalendarEvent, CalendarView, FamilyMember } from '../lib/types';
 import { friendlyDate, friendlyTime } from '../lib/format';
+import { apiResponseError, readJsonResponse } from '../lib/http';
 
 const views: CalendarView[] = ['Today', 'Week', 'Month'];
 
@@ -35,9 +36,13 @@ export default function CalendarPage() {
       const response = await fetch('/api/cal/bookings?days=30', {
         headers: accessCode ? { 'x-family-access-code': accessCode } : {},
       });
-      const payload = await response.json() as { events?: CalendarEvent[]; syncedAt?: string; error?: string };
+      const payload = await readJsonResponse<{ events?: CalendarEvent[]; syncedAt?: string; error?: string }>(response);
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Unable to sync Cal.com bookings.');
+        throw new Error(payload?.error ?? apiResponseError(response, 'Unable to sync Cal.com bookings.'));
+      }
+
+      if (!payload) {
+        throw new Error(apiResponseError(response, 'Cal.com returned an unexpected response.'));
       }
 
       setCalEvents(payload.events ?? []);
