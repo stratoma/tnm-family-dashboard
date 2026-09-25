@@ -51,8 +51,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(400).json({ error: error.issues[0]?.message ?? 'Enter a valid Cal.com API key.' });
       return;
     }
-    res.status(500).json({ error: 'Unable to update the Cal.com connection.' });
+    res.status(500).json({ error: safeConnectionError(error) });
   }
+}
+
+function safeConnectionError(error: unknown) {
+  const message = readErrorMessage(error).toLowerCase();
+
+  if (message.includes('invalid api key') || message.includes('invalid jwt') || message.includes('jwt')) {
+    return 'Supabase rejected SUPABASE_SERVICE_ROLE_KEY. Copy the service-role or secret key from this Supabase project.';
+  }
+
+  if (message.includes('supabaseurl is required') || message.includes('fetch failed') || message.includes('getaddrinfo')) {
+    return 'Supabase could not be reached. Check that SUPABASE_URL is the project URL.';
+  }
+
+  if (message.includes('invalid input syntax for type uuid')) {
+    return 'FAMILY_USER_ID is not a valid Supabase user UUID.';
+  }
+
+  if (message.includes('cal_calendar_connections') || message.includes('schema cache') || message.includes('relation')) {
+    return 'The Cal.com connection table is unavailable. Run the current Supabase schema and try again.';
+  }
+
+  if (message.includes('cal_connection_encryption_key')) {
+    return 'CAL_CONNECTION_ENCRYPTION_KEY must be the base64 32-byte value generated for this deployment.';
+  }
+
+  return 'Supabase could not save the Cal.com connection. Check the production Supabase variables.';
+}
+
+function readErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
+  return '';
 }
 
 function authorisedUser(req: VercelRequest) {
