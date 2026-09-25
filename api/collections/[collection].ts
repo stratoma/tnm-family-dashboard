@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseAdmin } from '../_supabaseAdmin';
-import type { VercelRequest, VercelResponse } from '../_types';
+import { getSupabaseAdmin } from '../_supabaseAdmin.js';
+import type { VercelRequest, VercelResponse } from '../_types.js';
 
 type CollectionName =
   | 'family_members'

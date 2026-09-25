@@ -1,5 +1,5 @@
-import type { VercelRequest, VercelResponse } from '../../_types';
-import { calendarScopes, getOAuthClient } from '../_oauth';
+import type { VercelRequest, VercelResponse } from '../../_types.js';
+import { calendarScopes, getOAuthClient } from '../_oauth.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {

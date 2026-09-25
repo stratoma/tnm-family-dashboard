@@ -1,8 +1,8 @@
 import { google } from 'googleapis';
 import { z } from 'zod';
-import type { VercelRequest, VercelResponse } from '../_types';
-import { getSupabaseAdmin } from '../_supabaseAdmin';
-import { getOAuthClient } from './_oauth';
+import type { VercelRequest, VercelResponse } from '../_types.js';
+import { getSupabaseAdmin } from '../_supabaseAdmin.js';
+import { getOAuthClient } from './_oauth.js';
 
 const querySchema = z.object({
   userId: z.string().uuid(),

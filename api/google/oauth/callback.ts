@@ -1,7 +1,7 @@
 import type { Credentials } from 'google-auth-library';
-import type { VercelRequest, VercelResponse } from '../../_types';
-import { getSupabaseAdmin } from '../../_supabaseAdmin';
-import { getOAuthClient } from '../_oauth';
+import type { VercelRequest, VercelResponse } from '../../_types.js';
+import { getSupabaseAdmin } from '../../_supabaseAdmin.js';
+import { getOAuthClient } from '../_oauth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {

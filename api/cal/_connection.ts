@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { getSupabaseAdmin } from '../_supabaseAdmin';
+import { getSupabaseAdmin } from '../_supabaseAdmin.js';
 
 const algorithm = 'aes-256-gcm';
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { timingSafeEqual } from 'node:crypto';
-import type { VercelRequest, VercelResponse } from '../_types';
-import { getCalApiKey } from './_connection';
+import type { VercelRequest, VercelResponse } from '../_types.js';
+import { getCalApiKey } from './_connection.js';
 
 const calApiVersion = '2026-02-25';
 
