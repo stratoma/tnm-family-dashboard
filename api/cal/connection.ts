@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { VercelRequest, VercelResponse } from '../_types';
 import { getCalConnectionStatus, removeCalConnection, saveCalApiKey } from './_connection';
 
+const calApiVersion = '2026-02-25';
+
 const bodySchema = z.object({
   apiKey: z.string().trim().min(12).max(512).regex(/^cal(?:_[a-z]+)?_/, 'Enter a valid Cal.com API key.'),
 });
@@ -23,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'POST') {
       const { apiKey } = bodySchema.parse(req.body);
       const verified = await fetch('https://api.cal.com/v2/bookings?status=upcoming&take=1', {
-        headers: { Accept: 'application/json', Authorization: `Bearer ${apiKey}`, 'cal-api-version': '2026-05-01' },
+        headers: { Accept: 'application/json', Authorization: `Bearer ${apiKey}`, 'cal-api-version': calApiVersion },
       });
 
       if (!verified.ok) {

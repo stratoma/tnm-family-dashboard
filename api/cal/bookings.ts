@@ -3,6 +3,8 @@ import { timingSafeEqual } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '../_types';
 import { getCalApiKey } from './_connection';
 
+const calApiVersion = '2026-02-25';
+
 const querySchema = z.object({
   days: z.coerce.number().int().min(1).max(90).default(30),
 });
@@ -50,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${apiKey}`,
-        'cal-api-version': '2026-05-01',
+        'cal-api-version': calApiVersion,
       },
     });
 
