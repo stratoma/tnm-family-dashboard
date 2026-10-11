@@ -23,6 +23,7 @@ import StatusPill from '../components/StatusPill';
 import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, groceriesSeed, projectsSeed, tasksSeed, activitiesSeed } from '../lib/sampleData';
 import { currency, daysUntil, friendlyDate, friendlyTime } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
+import { readCalBookings } from '../lib/calBookings';
 import type { GroceryCategory, ProjectStatus } from '../lib/types';
 
 type WeatherData = {
@@ -62,10 +63,11 @@ export default function Dashboard() {
   const { items: projects } = useLocalCollection(projectsSeed, 'home_projects');
   const today = new Date();
   const tomorrow = addDays(today, 1);
+  const combinedCalendarEvents = [...calendarEvents, ...readCalBookings()];
   const todayTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), today));
   const tomorrowTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), tomorrow));
-  const todayEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), today));
-  const tomorrowEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), tomorrow));
+  const todayEvents = combinedCalendarEvents.filter((event) => isSameDay(parseISO(event.start), today));
+  const tomorrowEvents = combinedCalendarEvents.filter((event) => isSameDay(parseISO(event.start), tomorrow));
   const todayActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), today));
   const tomorrowActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), tomorrow));
   const monthlyAppointments = appointments.filter((appointment) =>
@@ -75,7 +77,7 @@ export default function Dashboard() {
     isWithinInterval(parseISO(birthday.birthday), { start: today, end: endOfMonth(today) }),
   );
   const nextMonthEnd = endOfMonth(addMonths(today, 1));
-  const upcomingEvents = calendarEvents.filter((event) =>
+  const upcomingEvents = combinedCalendarEvents.filter((event) =>
     isWithinInterval(parseISO(event.start), { start: today, end: nextMonthEnd }),
   );
   const groceries = groceryItems.filter((item) => !item.bought).slice(0, 4);

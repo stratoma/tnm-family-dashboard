@@ -10,6 +10,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { CalendarEvent, CalendarView, FamilyMember } from '../lib/types';
 import { friendlyDate, friendlyTime } from '../lib/format';
 import { apiResponseError, readJsonResponse } from '../lib/http';
+import { readCalBookings, saveCalBookings } from '../lib/calBookings';
 
 const views: CalendarView[] = ['Today', 'Week', 'Month'];
 
@@ -20,7 +21,7 @@ export default function CalendarPage() {
   const [visibleCalendars, setVisibleCalendars] = useState(['Family', 'Kids', 'Health']);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [manualEventOpen, setManualEventOpen] = useState(false);
-  const [calEvents, setCalEvents] = useState<CalendarEvent[]>([]);
+  const [calEvents, setCalEvents] = useState<CalendarEvent[]>(readCalBookings);
   const [calError, setCalError] = useState('');
   const [syncingCal, setSyncingCal] = useState(false);
   const [calSyncedAt, setCalSyncedAt] = useState('');
@@ -45,7 +46,9 @@ export default function CalendarPage() {
         throw new Error(apiResponseError(response, 'Cal.com returned an unexpected response.'));
       }
 
-      setCalEvents(payload.events ?? []);
+      const syncedEvents = payload.events ?? [];
+      setCalEvents(syncedEvents);
+      saveCalBookings(syncedEvents);
       setCalSyncedAt(payload.syncedAt ?? new Date().toISOString());
       setVisibleCalendars((current) => (current.includes('Cal.com') ? current : [...current, 'Cal.com']));
     } catch (error) {
