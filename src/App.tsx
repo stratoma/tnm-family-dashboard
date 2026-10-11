@@ -11,6 +11,7 @@ import GroceryPage from './pages/GroceryPage';
 import ProjectsPage from './pages/ProjectsPage';
 import SettingsPage from './pages/SettingsPage';
 import AccessGate from './components/AccessGate';
+import familyDashboardLogo from './assets/family-dashboard-logo.png';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Home },
@@ -41,8 +42,8 @@ export default function App() {
         <header className="sticky top-0 z-30 border-b border-oat/70 bg-cream/90 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
             <NavLink to="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-sage text-white shadow-soft sm:h-11 sm:w-11">
-                <Sparkles size={21} />
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-sage shadow-soft sm:h-11 sm:w-11">
+                <img src={familyDashboardLogo} alt="Family Dashboard" className="h-8 w-8 object-contain sm:h-9 sm:w-9" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-lg font-semibold tracking-tight sm:text-xl">Family Dashboard</span>
