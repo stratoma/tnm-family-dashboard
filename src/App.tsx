@@ -1,4 +1,4 @@
-import { CalendarDays, CheckSquare, Gift, HeartPulse, Home, ListTodo, Menu, ShoppingBasket, Sparkles, Users, X } from 'lucide-react';
+import { CalendarDays, CheckSquare, Gift, HeartPulse, Home, ListTodo, MapPin, Menu, ShoppingBasket, Sparkles, Users, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
@@ -10,6 +10,7 @@ import BirthdaysPage from './pages/BirthdaysPage';
 import GroceryPage from './pages/GroceryPage';
 import ProjectsPage from './pages/ProjectsPage';
 import SettingsPage from './pages/SettingsPage';
+import PlacesPage from './pages/PlacesPage';
 import AccessGate from './components/AccessGate';
 import familyDashboardLogo from './assets/family-dashboard-logo.png';
 
@@ -22,6 +23,7 @@ const navItems = [
   { to: '/birthdays', label: 'Birthdays', icon: Gift },
   { to: '/grocery', label: 'Grocery', icon: ShoppingBasket },
   { to: '/projects', label: 'Projects', icon: ListTodo },
+  { to: '/places', label: 'Places', icon: MapPin },
 ];
 
 export default function App() {
@@ -86,6 +88,7 @@ export default function App() {
             <Route path="/birthdays" element={<BirthdaysPage />} />
             <Route path="/grocery" element={<GroceryPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/places" element={<PlacesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>

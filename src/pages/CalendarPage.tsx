@@ -10,6 +10,7 @@ import { useLocalCollection } from '../lib/useLocalCollection';
 import type { CalendarEvent, CalendarView, FamilyMember } from '../lib/types';
 import { friendlyDate, friendlyTime } from '../lib/format';
 import { apiResponseError, readJsonResponse } from '../lib/http';
+import { expandCalendarEvents, recurringEventLabel, weekdays } from '../lib/calendar';
 import { readCalBookings, saveCalBookings } from '../lib/calBookings';
 
 const views: CalendarView[] = ['Today', 'Week', 'Month'];
@@ -25,7 +26,14 @@ export default function CalendarPage() {
   const [calError, setCalError] = useState('');
   const [syncingCal, setSyncingCal] = useState(false);
   const [calSyncedAt, setCalSyncedAt] = useState('');
-  const events = [...items, ...calEvents].sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
+  const [draftStart, setDraftStart] = useState('');
+  const [draftEnd, setDraftEnd] = useState('');
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
+  const recurrenceRangeEnd = new Date();
+  recurrenceRangeEnd.setDate(recurrenceRangeEnd.getDate() + 90);
+  const events = [...expandCalendarEvents(items, new Date(), recurrenceRangeEnd), ...calEvents]
+    .sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
   const calendars = Array.from(new Set(events.map((event) => event.calendar)));
 
   async function syncCal() {
@@ -60,11 +68,20 @@ export default function CalendarPage() {
 
   function openAddEvent() {
     setEditingEvent(null);
+    setDraftStart('');
+    setDraftEnd('');
+    setRepeatWeekly(false);
+    setRepeatDays([]);
     setManualEventOpen(true);
   }
 
   function openEditEvent(event: CalendarEvent) {
-    setEditingEvent(event);
+    const sourceEvent = event.seriesId ? items.find((item) => item.id === event.seriesId) ?? event : event;
+    setEditingEvent(sourceEvent);
+    setDraftStart(sourceEvent.start);
+    setDraftEnd(sourceEvent.end);
+    setRepeatWeekly(Boolean(sourceEvent.recurrence));
+    setRepeatDays(sourceEvent.recurrence?.days ?? []);
     setManualEventOpen(true);
   }
 
@@ -85,16 +102,31 @@ export default function CalendarPage() {
       end: String(form.get('end')),
       location: String(form.get('location')),
       color: String(form.get('color')),
+      recurrence: repeatWeekly && repeatDays.length ? { frequency: 'weekly' as const, days: repeatDays } : null,
     };
 
     if (editingEvent) {
-      update(editingEvent.id, nextEvent);
+      update(editingEvent.seriesId ?? editingEvent.id, nextEvent);
     } else {
       add(nextEvent);
       setVisibleCalendars((current) => (current.includes(nextEvent.calendar) ? current : [...current, nextEvent.calendar]));
     }
 
     closeModal();
+  }
+
+  function handleStartChange(nextStart: string) {
+    setDraftStart(nextStart);
+    if (!nextStart) {
+      return;
+    }
+
+    const startDate = nextStart.slice(0, 10);
+    const endTime = draftEnd.slice(11) || nextStart.slice(11);
+    setDraftEnd(`${startDate}T${endTime}`);
+    if (!repeatDays.length) {
+      setRepeatDays([new Date(`${startDate}T12:00:00`).getDay()]);
+    }
   }
 
   return (
@@ -187,6 +219,7 @@ export default function CalendarPage() {
                       {friendlyTime(event.start)} - {friendlyTime(event.end)}
                       {event.location ? ` · ${event.location}` : ''}
                     </p>
+                    {recurringEventLabel(event) ? <p className="mt-1 text-sm font-medium text-sage">{recurringEventLabel(event)}</p> : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <StatusPill label={event.calendar} tone="blue" />
@@ -194,7 +227,7 @@ export default function CalendarPage() {
                       <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => openEditEvent(event)} aria-label="Edit calendar invite">
                         <Pencil size={17} />
                       </button>
-                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(event.id)} aria-label="Delete calendar invite">
+                      <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-stone-500" onClick={() => remove(event.seriesId ?? event.id)} aria-label="Delete calendar invite">
                         <Trash2 size={17} />
                       </button>
                     </>}
@@ -214,8 +247,36 @@ export default function CalendarPage() {
               {members.map((member) => <option key={member.id}>{member.name}</option>)}
             </SelectInput>
           </Field>
-          <Field label="Start"><TextInput name="start" type="datetime-local" required defaultValue={editingEvent?.start} /></Field>
-          <Field label="End"><TextInput name="end" type="datetime-local" required defaultValue={editingEvent?.end} /></Field>
+          <Field label="Start"><TextInput name="start" type="datetime-local" required value={draftStart} onChange={(event) => handleStartChange(event.target.value)} /></Field>
+          <Field label="End"><TextInput name="end" type="datetime-local" required value={draftEnd} onChange={(event) => setDraftEnd(event.target.value)} /></Field>
+          <Field label="Repeats">
+            <SelectInput value={repeatWeekly ? 'weekly' : 'once'} onChange={(event) => setRepeatWeekly(event.target.value === 'weekly')}>
+              <option value="once">Does not repeat</option>
+              <option value="weekly">Weekly</option>
+            </SelectInput>
+          </Field>
+          {repeatWeekly ? (
+            <fieldset className="grid gap-2">
+              <legend className="label">Repeat on</legend>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+                {weekdays.map((day) => {
+                  const selected = repeatDays.includes(day.value);
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      aria-pressed={selected}
+                      className={`min-h-11 rounded-xl border px-2 text-sm font-semibold ${selected ? 'border-sage bg-sage text-white' : 'border-oat bg-white text-stone-600'}`}
+                      onClick={() => setRepeatDays((current) => selected ? current.filter((value) => value !== day.value) : [...current, day.value])}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-sm text-stone-500">Choose one or more days, such as Friday and Saturday.</p>
+            </fieldset>
+          ) : null}
           <Field label="Location"><TextInput name="location" defaultValue={editingEvent?.location} /></Field>
           <Field label="Color"><TextInput name="color" type="color" defaultValue={editingEvent?.color ?? '#8da089'} /></Field>
           <FormActions onCancel={closeModal} submitLabel={editingEvent ? 'Save changes' : 'Add event'} />

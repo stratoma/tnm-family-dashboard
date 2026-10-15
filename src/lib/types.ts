@@ -2,6 +2,10 @@ export type Priority = 'Low' | 'Medium' | 'High';
 export type ProjectStatus = 'Not Started' | 'In Progress' | 'Waiting' | 'Done';
 export type CalendarView = 'Today' | 'Week' | 'Month';
 export type ActivityFrequency = 'One-time' | 'Weekly' | 'Biweekly' | 'Monthly';
+export type CalendarRecurrence = {
+  frequency: 'weekly';
+  days: number[];
+};
 
 export type FamilyMember = {
   id: string;
@@ -29,6 +33,8 @@ export type CalendarEvent = {
   color: string;
   location?: string;
   source?: 'manual' | 'cal.com';
+  recurrence?: CalendarRecurrence | null;
+  seriesId?: string;
 };
 
 export type KidsActivity = {
@@ -84,6 +90,18 @@ export type ProjectTask = {
   id: string;
   title: string;
   completed: boolean;
+};
+
+export type PlaceCategory = 'Food' | 'Outdoors' | 'Culture' | 'Family fun' | 'Travel' | 'Other';
+
+export type PlaceToVisit = {
+  id: string;
+  name: string;
+  category: PlaceCategory;
+  location: string;
+  plannedDate?: string;
+  notes: string;
+  visited: boolean;
 };
 
 export type HomeProject = {

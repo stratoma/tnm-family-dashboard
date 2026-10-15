@@ -20,11 +20,12 @@ import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import StatusPill from '../components/StatusPill';
-import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, groceriesSeed, projectsSeed, tasksSeed, activitiesSeed } from '../lib/sampleData';
+import { appointmentsSeed, birthdaysSeed, calendarSeed, emailRepliesSeed, groceriesSeed, placesSeed, projectsSeed, tasksSeed, activitiesSeed } from '../lib/sampleData';
 import { currency, daysUntil, friendlyDate, friendlyTime } from '../lib/format';
 import { useLocalCollection } from '../lib/useLocalCollection';
-import { readCalBookings } from '../lib/calBookings';
 import type { GroceryCategory, ProjectStatus } from '../lib/types';
+import { expandCalendarEvents } from '../lib/calendar';
+import { readCalBookings } from '../lib/calBookings';
 
 type WeatherData = {
   city: string;
@@ -55,19 +56,23 @@ function activityMeta(activity: { childName: string; dateTime: string; location:
 
 export default function Dashboard() {
   const { items: tasks } = useLocalCollection(tasksSeed, 'tasks');
-  const { items: calendarEvents } = useLocalCollection(calendarSeed, 'calendar_events');
+  const { items: storedCalendarEvents } = useLocalCollection(calendarSeed, 'calendar_events');
   const { items: activities } = useLocalCollection(activitiesSeed, 'kids_activities');
   const { items: appointments } = useLocalCollection(appointmentsSeed, 'doctor_appointments');
   const { items: birthdays } = useLocalCollection(birthdaysSeed, 'birthdays');
   const { items: groceryItems } = useLocalCollection(groceriesSeed, 'grocery_items');
+  const { items: places } = useLocalCollection(placesSeed, 'places_to_visit');
   const { items: projects } = useLocalCollection(projectsSeed, 'home_projects');
   const today = new Date();
   const tomorrow = addDays(today, 1);
-  const combinedCalendarEvents = [...calendarEvents, ...readCalBookings()];
+  const calendarEvents = [
+    ...expandCalendarEvents(storedCalendarEvents, today, endOfMonth(addMonths(today, 1))),
+    ...readCalBookings(),
+  ];
   const todayTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), today));
   const tomorrowTasks = tasks.filter((task) => !task.completed && isSameDay(parseISO(task.dueDate), tomorrow));
-  const todayEvents = combinedCalendarEvents.filter((event) => isSameDay(parseISO(event.start), today));
-  const tomorrowEvents = combinedCalendarEvents.filter((event) => isSameDay(parseISO(event.start), tomorrow));
+  const todayEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), today));
+  const tomorrowEvents = calendarEvents.filter((event) => isSameDay(parseISO(event.start), tomorrow));
   const todayActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), today));
   const tomorrowActivities = activities.filter((activity) => isSameDay(parseISO(activity.dateTime), tomorrow));
   const monthlyAppointments = appointments.filter((appointment) =>
@@ -77,10 +82,11 @@ export default function Dashboard() {
     isWithinInterval(parseISO(birthday.birthday), { start: today, end: endOfMonth(today) }),
   );
   const nextMonthEnd = endOfMonth(addMonths(today, 1));
-  const upcomingEvents = combinedCalendarEvents.filter((event) =>
+  const upcomingEvents = calendarEvents.filter((event) =>
     isWithinInterval(parseISO(event.start), { start: today, end: nextMonthEnd }),
   );
   const groceries = groceryItems.filter((item) => !item.bought).slice(0, 4);
+  const placesToVisit = places.filter((place) => !place.visited).slice(0, 3);
 
   return (
     <>
@@ -115,6 +121,17 @@ export default function Dashboard() {
                   </span>
                 </div>
               ))}
+            </div>
+          </SectionCard>
+          <SectionCard title="Places to visit" subtitle={`${placesToVisit.length} saved for later`}>
+            <div className="grid gap-3">
+              {placesToVisit.map((place) => (
+                <Link key={place.id} to="/places" className="rounded-2xl bg-linen p-3 transition hover:bg-oat/70">
+                  <span className="block font-semibold">{place.name}</span>
+                  <span className="block text-sm text-stone-500">{place.location}{place.plannedDate ? ` · ${friendlyDate(place.plannedDate)}` : ''}</span>
+                </Link>
+              ))}
+              <Link to="/places" className="text-sm font-semibold text-sage underline underline-offset-4">Manage places to visit</Link>
             </div>
           </SectionCard>
           <SectionCard title="Dates to remember" subtitle="This month and next" icon={<Gift size={21} />}>

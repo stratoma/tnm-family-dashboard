@@ -1,4 +1,4 @@
-import type { Birthday, CalendarEvent, DoctorAppointment, EmailReply, FamilyMember, GroceryItem, HomeProject, KidsActivity, Task } from './types';
+import type { Birthday, CalendarEvent, DoctorAppointment, EmailReply, FamilyMember, GroceryItem, HomeProject, KidsActivity, PlaceToVisit, Task } from './types';
 
 export const familyMembers: FamilyMember[] = [
   { id: 'm1', name: 'Alex', color: '#8da089', role: 'Adult' },
@@ -67,6 +67,12 @@ export const groceriesSeed: GroceryItem[] = [
   { id: 'g2', name: 'Chicken thighs', category: 'Meat', bought: false },
   { id: 'g3', name: 'Greek yogurt', category: 'Dairy', bought: true },
   { id: 'g4', name: 'Paper towels', category: 'Household', bought: false },
+];
+
+export const placesSeed: PlaceToVisit[] = [
+  { id: 'pl1', name: 'Riverside Science Museum', category: 'Culture', location: 'Riverside', plannedDate: '2026-10-24', notes: 'Check the weekend planetarium schedule.', visited: false },
+  { id: 'pl2', name: 'Willow Creek Trail', category: 'Outdoors', location: 'Northside', notes: 'Bring bikes and a picnic.', visited: false },
+  { id: 'pl3', name: 'Little Lantern Bakery', category: 'Food', location: 'Main Street', notes: 'Try the cinnamon rolls.', visited: false },
 ];
 
 export const projectsSeed: HomeProject[] = [

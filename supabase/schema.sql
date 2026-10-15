@@ -52,6 +52,7 @@ create table public.calendar_events (
   end_time timestamptz not null,
   color text not null default '#8da089',
   location text,
+  recurrence jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -84,6 +85,18 @@ create table public.grocery_items (
   name text not null,
   category text not null check (category in ('Produce', 'Meat', 'Dairy', 'Pantry', 'Household', 'Snacks', 'Other')),
   bought boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table public.places_to_visit (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  name text not null,
+  category text not null check (category in ('Food', 'Outdoors', 'Culture', 'Family fun', 'Travel', 'Other')),
+  location text,
+  planned_date date,
+  notes text,
+  visited boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -149,6 +162,7 @@ alter table public.kids_activities enable row level security;
 alter table public.doctor_appointments enable row level security;
 alter table public.birthdays enable row level security;
 alter table public.grocery_items enable row level security;
+alter table public.places_to_visit enable row level security;
 alter table public.home_projects enable row level security;
 alter table public.project_tasks enable row level security;
 alter table public.google_calendar_connections enable row level security;
@@ -179,6 +193,9 @@ create policy "Users own birthdays" on public.birthdays
 create policy "Users own grocery items" on public.grocery_items
   for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
+create policy "Users own places to visit" on public.places_to_visit
+  for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
 create policy "Users own home projects" on public.home_projects
   for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
@@ -199,5 +216,6 @@ create index calendar_events_user_start_idx on public.calendar_events(user_id, s
 create index activities_user_date_idx on public.kids_activities(user_id, date_time);
 create index appointments_user_date_idx on public.doctor_appointments(user_id, date_time);
 create index grocery_user_category_idx on public.grocery_items(user_id, category);
+create index places_to_visit_user_planned_idx on public.places_to_visit(user_id, planned_date);
 create index calendar_connections_user_idx on public.google_calendar_connections(user_id);
 create index cal_connections_user_idx on public.cal_calendar_connections(user_id);

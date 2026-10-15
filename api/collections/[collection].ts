@@ -10,6 +10,7 @@ type CollectionName =
   | 'doctor_appointments'
   | 'birthdays'
   | 'grocery_items'
+  | 'places_to_visit'
   | 'home_projects';
 
 type CollectionConfig = {
@@ -66,6 +67,7 @@ const configs: Record<Exclude<CollectionName, 'home_projects'>, CollectionConfig
       end: toDateTimeInput(row.end_time),
       color: row.color,
       location: row.location ?? '',
+      recurrence: row.recurrence ?? null,
     }),
     toDb: (item) => ({
       title: item.title,
@@ -75,6 +77,7 @@ const configs: Record<Exclude<CollectionName, 'home_projects'>, CollectionConfig
       end_time: item.end,
       color: item.color,
       location: item.location,
+      recurrence: item.recurrence ?? null,
     }),
   },
   kids_activities: {
@@ -155,6 +158,27 @@ const configs: Record<Exclude<CollectionName, 'home_projects'>, CollectionConfig
       name: item.name,
       category: item.category,
       bought: item.bought,
+    }),
+  },
+  places_to_visit: {
+    table: 'places_to_visit',
+    order: 'planned_date',
+    toClient: (row) => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      location: row.location ?? '',
+      plannedDate: row.planned_date ?? undefined,
+      notes: row.notes ?? '',
+      visited: row.visited ?? false,
+    }),
+    toDb: (item) => ({
+      name: item.name,
+      category: item.category,
+      location: item.location,
+      planned_date: item.plannedDate || null,
+      notes: item.notes,
+      visited: item.visited,
     }),
   },
 };
